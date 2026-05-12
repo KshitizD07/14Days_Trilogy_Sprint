@@ -2,232 +2,238 @@ SCALING:
 
 ---
 
+Scaling is how you keep a system working as traffic, data, and feature complexity grow.
+
+There are two big questions in scaling:
+1. **Capacity**: How much traffic can we handle?
+2. **Reliability**: What happens when parts fail?
+
+---
+
 Part 1: Understanding Server Capacity (The Math)
 
-&#x09;Scenario: Your Current Setup->You have one server with these specs:
+Scenario: Your current setup
+* CPU: 4 cores
+* RAM: 16 GB
+* Network: 1 Gbps
 
-&#x09;	CPU: 4 cores
+Question: How many users can this server handle?
 
-&#x09;	RAM: 16 GB
-
-&#x09;	Network: 1 Gbps (gigabit per second)
-
-&#x09;Question: How many users can this server handle?
-
-
-
-Metric 1: Requests Per Second (QPS - Queries Per Second)
-
+### Metric 1: Requests Per Second (QPS - Queries Per Second)
 Assumptions:
-
-&#x09;Each user makes 10 requests per day (checking TODO list, adding tasks, etc.)
-
-&#x09;Users are active during 12-hour window (9 AM - 9 PM)
+* Each user makes 10 requests per day (view list, add task, refresh, etc.)
+* Users are active during a 12-hour window (9 AM - 9 PM) = 43,200 seconds
 
 Math:
-	Daily Active Users (DAU) = 100,000
+* Daily Active Users (DAU) = 100,000
+* Requests per user per day = 10
+* Total requests per day = 100,000 * 10 = 1,000,000 requests
+* Average QPS = 1,000,000 / 43,200 ~= 23 QPS
 
-&#x09;Requests per user per day = 10
+Peak traffic matters:
+* Peak can be 3-5x average (lunch hour, evening)
+* Peak QPS ~= 23 * 5 ~= 115 QPS
 
-&#x09;Total requests per day = 100,000 × 10 = 1,000,000 requests
+### Metric 2: Latency (Time per request) controls throughput
+If one request takes 10ms of CPU time, a single core can theoretically do ~100 req/s CPU time (ignoring overhead).
 
-&#x09;
+Rule of thumb:
+* More latency per request -> fewer QPS a server can handle.
 
-&#x09;Active window = 12 hours = 43,200 seconds
+Example intuition (very simplified):
+* If CPU time per request = 10ms and you have 4 cores, capacity might be ~400 QPS.
+* If CPU time per request = 100ms, capacity might be ~40 QPS.
+* If peak incoming is 115 QPS and you can only do 40 QPS, requests queue up and you time out.
 
-&#x09;Average QPS = 1,000,000 / 43,200 = \~23 QPS
+### The key interview point: Bottleneck decides capacity
+Capacity is limited by the tightest resource:
+* CPU bound: heavy computation, JSON parsing, encryption, image processing
+* IO bound: database calls, network calls, disk reads
+* Memory bound: huge in-memory caches, large request/response objects, leaks
+* Network bound: large responses, file downloads, images/videos
 
-
-
-&#x09;Peak traffic (lunch hour, evening) can be 3-5x average:
-
-&#x09;Peak QPS = 23 × 5 = 115 QPS
-
-
-
-&#x09;If 1 query takes 10ms of time, total queries it can handle for 4 cores will be: 400QPS, but if the time of one query is 100ms the number reduces to 40QPS, while the number of incoming queries is approx. 115...resulting in server crash.
-
-
-
-
-
-
-
-
+---
 
 Part 2: The Two Ways to Scale
 
-&#x09;When one server isn't enough, you have two options:
+When one server isn't enough, you have two options:
 
+```text
+            How do I handle more traffic?
+                       |
+          +------------+------------+
+          |                         |
+     VERTICAL SCALING          HORIZONTAL SCALING
+       (Scale Up)                (Scale Out)
+```
 
-
-&#x09;	┌─────────────────────────────────────┐
-
-&#x09;	│    How do I handle more traffic?    │
-
-&#x09;	└──────────────┬──────────────────────┘
-
-&#x09;		           │
-
-&#x09;	       ┌───────┴────────┐
-
-&#x09;	       │                │
-
-&#x20;		      ▼                ▼
-
-&#x09;	  VERTICAL          HORIZONTAL
-
-&#x09;	  SCALING            SCALING
-
-&#x09;	  (Scale Up)         (Scale Out)
-
-&#x09;	       │                │
-
-&#x09;	       │                │
-
-&#x09;	Make existing      Add more
-
-&#x09;	server bigger      servers
-
-
-
-
-
-VERTICAL SCALING: Increase the capacity of your current servers, i.e. make the existing servers stronger and able to handle more requests.
-
-
+### VERTICAL SCALING (Scale Up)
+Increase the capacity of your existing server (bigger machine).
 
 Before:
+* Server: 4 CPU cores, 16 GB RAM
+* Can handle: ~40 QPS (example)
 
-&#x09;Server: 4 CPU cores, 16 GB RAM
+After:
+* Server: 32 CPU cores, 128 GB RAM, SSD
+* Can handle: ~320 QPS (example)
 
-&#x09;Can handle: 40 QPS
+Pros of vertical scaling:
+* Simple: upgrade instance size
+* No code changes: app doesn't know the difference
+* Less distributed complexity: fewer moving parts
+* Strong consistency is easier (single node patterns)
 
-After (Vertical Scaling):
+Cons of vertical scaling:
+1. **Physical limits**: there is a ceiling.
+2. **Single point of failure (SPOF)**: if it dies, you're down.
+3. **Downtime / risk during upgrade**: often requires restart or migration.
+4. **Cost inefficiency**: big instances often cost disproportionately more.
+5. **Overkill for variable traffic**: you pay for peak even at off-peak.
 
-&#x09;Server: 32 CPU cores, 128 GB RAM, SSD storage
-
-&#x09;Can handle: 320 QPS
-
-
-
-
-
-Pros of Vertical Scaling :
-
-&#x09;Simple: Just click a button, restart server
-
-&#x09;No code changes: Your app doesn't know the difference
-
-&#x09;No complexity: Still one server to manage
-
-&#x09;Data consistency: No need to sync data between servers
-
-Cons of Vertical Scaling:
-
-&#x09;1. Physical Limits-You can't keep upgrading forever. There's a ceiling.
-
-&#x09;2. Single Point of Failure (SPOF)-Result: 100% downtime until you fix it.
-
-&#x09;3. Downtime During Scaling-To upgrade, you usually need to: Stop server, upgrade, start again...users might be lost during maintenance downtime.
-
-&#x09;4. Cost Inefficiency-Pricing isn't linear. It gets expensive fast.
-
-&#x20;		2 cores,  4 GB RAM → $30/month
-
-&#x20;		4 cores, 16 GB RAM → $140/month (4.6x more expensive for 2x capacity)
-
-&#x09;	16 cores, 64 GB RAM → $560/month (18x more expensive for 8x capacity)
-
-&#x09;5. Overkill for Variable Traffic
-
-
-
-
-
-
-
-
-
-
-
-HORIZONTAL SCALING (Scale Out): Increase the number of servers to handle more users/queries.
+### HORIZONTAL SCALING (Scale Out)
+Add more servers.
 
 Before:
+* 1 server: 4 cores, 16 GB
+* Capacity: ~40 QPS
 
-&#x09;1 Server: 4 cores, 16 GB RAM
+After:
+* 10 servers: each 4 cores, 16 GB
+* Capacity: ~400 QPS (10 * 40)
 
-&#x09;Can handle: 40 QPS
+Why you need a Load Balancer:
+* If you have many servers, you need one public entry point that distributes requests.
 
-After (Horizontal Scaling):
+## Figure: Basic Horizontal Scaling
+```mermaid
+flowchart TB
+  C[Clients] --> LB[Load Balancer]
+  LB --> A1[App Server 1]
+  LB --> A2[App Server 2]
+  LB --> A3[App Server 3]
+```
 
-&#x09;10 Servers: Each 4 cores, 16 GB RAM
+Pros of horizontal scaling:
+* Higher availability (no single server outage kills the system)
+* Elastic scaling (autoscale up/down)
+* Commodity hardware can be cost effective at scale
 
-&#x09;Can handle: 400 QPS (10 × 40)
+Cons of horizontal scaling:
+* More complexity: LB, health checks, deployments, observability
+* State management becomes hard (sessions, caches)
+* Data consistency challenges for shared data stores
 
+---
 
+Part 3: The Load Balancer (Why It Exists)
 
-How It Works: The Load Balancer-> In case of H.S. we'll be needing a load balancer to route the traffic accordingly, cause if the number of servers increases how would the servers know 	      which query or user must be dealt by which server.
+What a load balancer does:
+* Accepts traffic for `www.myapp.com`
+* Chooses an upstream server based on a policy (round robin, least connections, etc.)
+* Performs health checks to avoid sending traffic to dead/unhealthy servers
+* Can terminate TLS (HTTPS), compress responses, enforce rate limits, etc. (depending on L7 vs L4)
 
+### L4 vs L7 Load Balancing
+* **L4 (Transport)**: routes TCP/UDP connections (fast, less aware of HTTP).
+* **L7 (Application)**: routes based on HTTP path/host/headers (smarter, can do routing rules).
 
+---
 
-&#x09;	    ┌──────────────┐
+Part 4: The Hidden Enemy: Queues and Tail Latency
 
-&#x20;                   │ LOAD BALANCER│  ← www.myapp.com points here
+When utilization rises, latency grows non-linearly due to queueing.
 
-&#x20;                   └───────┬──────┘
+What happens near 100% CPU:
+* Requests don't fail immediately
+* They queue up
+* Response times explode
+* Timeouts happen
 
-&#x20;                           │
+Important interview concept:
+* **Average latency is not enough**. You care about **p95/p99** (tail latency).
 
-&#x20;         ┌─────────────────┼─────────────────┐
+Example:
+* p50 = 30ms (typical user)
+* p99 = 900ms (worst 1% users, often what causes timeouts and bad UX)
 
-&#x20;         │                 │                 │
+---
 
-&#x20;         ▼                 ▼                 ▼
+Part 5: State Management (The Main Horizontal Scaling Problem)
 
-&#x20;   ┌─────────┐       ┌─────────┐       ┌─────────┐
+Problem:
+* User logs in -> request goes to Server 1
+* Server 1 stores session in its memory
+* Next request -> load balancer sends to Server 2
+* Server 2 doesn't know the session -> user is "logged out"
 
-&#x20;   │Server 1    │       │Server 2 │          │Server 3 │
+Solutions:
+1. **Sticky sessions** (quick fix, not ideal): LB routes the same user to the same server.
+2. **Central session store** (recommended for server-side sessions): store sessions in Redis/Memcached/DB.
+3. **Stateless auth** (JWT): server stores no session; client sends token each request.
 
-&#x20;   │40 QPS      │       │40 QPS   │          │40 QPS   │
+## Figure: Centralized Session Store
+```mermaid
+flowchart TB
+  LB[Load Balancer] --> A1[App Server 1]
+  LB --> A2[App Server 2]
+  A1 --> R[(Redis Session Store)]
+  A2 --> R
+```
 
-&#x20;   └─────────┘       └─────────┘       └─────────┘
+---
 
-&#x20;   
+Part 6: The Real-World Hybrid Strategy
 
-&#x20;   Total capacity: 120 QPS
+Most companies use both vertical and horizontal scaling:
+* App servers: scale horizontally (stateless design)
+* Database: scale vertically first, then horizontally (replicas/sharding) as needed
 
+## Figure: Hybrid Scaling Pattern
+```mermaid
+flowchart TB
+  C[Clients] --> LB[Load Balancer]
+  LB --> A1[App Server (large)]
+  LB --> A2[App Server (large)]
+  LB --> A3[App Server (large)]
+  A1 --> DB[(Database: beefy primary)]
+  A2 --> DB
+  A3 --> DB
+  DB --> R1[(Read replica)]
+  DB --> R2[(Read replica)]
+```
 
+Why this pattern works:
+* App tier is easier to replicate (stateless)
+* DB tier is stateful, harder to distribute; you scale it carefully
 
+---
 
+Common Interview Questions (With "Good" Reasoning)
 
-Load Balancing Algorithms:
+**Q1: Why doesn't everyone just use horizontal scaling?**
+Good answer:
+* Horizontal scaling increases availability and throughput, but adds major complexity:
+  * load balancers, orchestration, deployments, distributed sessions, monitoring
+* Some bottlenecks don't improve by adding app servers (e.g., DB bottleneck).
+* For MVPs/small teams, it can be over-engineering.
 
-&#x09;1. Round Robin (Most Common):It rotates through each servers in order. Although it's very simple and fair, it doesn't account for system check/server health or request complexity.
+**Q2: Your server is at 80% CPU. Do you scale vertically or horizontally?**
+Good answer:
+1. Diagnose first:
+   * is it a code inefficiency? (optimize)
+   * is it a slow DB query? (index/optimize)
+   * is it a dependency latency spike? (timeouts/circuit breakers)
+2. If it's real sustained traffic:
+   * scale vertically for a quick short-term fix
+   * scale horizontally for long-term growth + availability
+3. After scaling:
+   * re-check bottlenecks (DB might become the new bottleneck)
 
-&#x09;	Request 1 → Server 1
-
-&#x09;	Request 2 → Server 2
-
-&#x09;	Request 3 → Server 3
-
-&#x09;	Request 4 → Server 1 (back to start)
-
-&#x09;	Request 5 → Server 2
-
-&#x09;	...
-
-&#x09;When to use: All servers are identical, all requests are similar.
-
-
-
-
-
-
-
-
-
-
-
-
-
+**Q3: What should you monitor while scaling?**
+Good answer: monitor the whole request path:
+* QPS, error rates, latency (p50/p95/p99)
+* CPU/memory, GC, thread pools
+* DB QPS, slow queries, connections, locks
+* Cache hit rate
+* Queue depths (if async)

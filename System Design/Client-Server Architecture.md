@@ -1,272 +1,214 @@
 # Client-Server Architecture:
 
-* In CSA, the client which could be the mobile or laptop's browser, sends a request to the server over the internet, this request is then processed by the server and is replied with appropriate response (like sending back the asked data).
-* The request that the client sends contains the **URL, Headers and Body.**
-* ### URL(Uniform Resource Locator)-
+* In **Client-Server Architecture (CSA)**, the **client** (browser/mobile app/desktop app) sends a **request** to a **server** over a network. The **server processes** it (auth, business logic, DB/cache reads/writes) and returns a **response** (HTML/JSON/image/file/etc.).
+* Most "web system design" discussions are basically: how do requests move from client -> server(s) -> data stores and back, reliably and fast.
+* An HTTP request is mainly: **URL + Method + Headers + Body** (body is optional).
 
-  * It's just and address: https://www.amazon.com:443/products/laptop?color=silver\&sort=price#reviews
+## Figure: The Basic Flow
+```mermaid
+flowchart LR
+  U[User] --> C[Client: Browser / App]
+  C -->|HTTP request| S[Server: API / Web]
+  S -->|DB/Cache/Services| D[(Data + Dependencies)]
+  D --> S
+  S -->|HTTP response| C
+```
 
-&#x09;                     (protocol) (domain/host)(port)(path)(query parameters) (fragments)         
+## URL (Uniform Resource Locator):
+* A URL is an address that tells the client where to send the request and what resource it wants.
+* Example:
+  `https://www.amazon.com:443/products/laptop?color=silver&sort=price#reviews`
 
-1. #### &#x20;Protocols-
+| Part | Example | What It Means |
+|---|---|---|
+| Protocol (scheme) | `https` | Rules for communication (HTTP over TLS). |
+| Domain / Host | `www.amazon.com` | Human-readable name for a server. Resolved to IP via DNS. |
+| Port | `443` | Which service/process on the host (443 for HTTPS). Usually implicit. |
+| Path | `/products/laptop` | Which resource/route on the server. |
+| Query params | `?color=silver&sort=price` | Extra input for filtering/sorting/pagination. |
+| Fragment | `#reviews` | Client-side anchor. Sent to browser, not to server. |
 
-&#x09;-https://:it is insecure, data is sent in plain English
+### 1. Protocols:
+* `http://` (insecure): data is unencrypted on the wire.
+* `https://` (secure): HTTP wrapped with TLS, so data is encrypted in transit.
 
-&#x09;Ex- "password123"
+Important nuance:
+* HTTPS does **not** mean the server is "trustworthy". It means the connection is encrypted, and the server proves ownership of the domain via certificates.
 
-&#x09;-https://:the data is encrypted with SSL/TLS
+### 2. Domain (Host):
+* Domain is a human-readable name mapped to an IP address using **DNS**.
+* One company can use different subdomains for different roles:
+  * `mail.google.com` (mail)
+  * `api.twitter.com` (API)
+  * `cdn.netflix.com` (CDN)
 
-&#x09;Ex- "x7$9mK!p3"
+### 3. Port:
+* A machine can run multiple services. Ports route the request to the correct service.
+* Common ports:
+  * `80` HTTP
+  * `443` HTTPS
+  * `5432` PostgreSQL (DB, not exposed publicly usually)
 
-#### 
+### 4. Path:
+* The server uses the path to decide which handler (route/controller) should process the request.
+* Example:
+  * `GET /products/123` might fetch product details
+  * `POST /cart/items` might add an item to the cart
 
-#### 2\.  Domain-
+### 5. Query Parameters:
+* Query parameters are extra inputs after `?`.
+* Multiple parameters separated by `&`.
+* Common system design usage: filtering, sorting, pagination:
+  * `?page=2&limit=50&sort=price_desc`
 
-&#x09;-The human readable address of the server. These are translated to IP addresses using DNS.
+## What Actually Sits in an HTTP Request:
+Here is a realistic request (format matters in interviews).
 
-&#x09;-These can be mail server(mail.google.com), API server(api.twitter.com), CDN(cdn.netflix.com)
-
-
-
-#### 3\.  Port-
-
-&#x09;-These are usually hidden in URLs, they send the request to specific process.
-
-
-
-#### 4\.  Path-
-
-&#x09;-The specific resource you're requesting on the server.
-
-
-
-#### 5\.  Query Parameters-
-
-&#x09;-This is the extra data sent to filter/modify response. The "?" starts the query string.
-
-&#x09;(key1=value)First parameter, \& is used as separator.
-
-
-
-
-
-##### What Actually sits in an HTTP Request:
-
-&#x09;POST /api/login HTTP/1.1
-
-&#x09;Host: www.facebook.com
-
-&#x09;User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-
-&#x09;Accept: application/json
-
-&#x09;Content-Type: application/json
-
-&#x09;Content-Length: 57
-
-&#x09;Cookie: session\_id=abc123; user\_pref=dark\_mode
-
-&#x09;Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-
-
-&#x09;{
-
-&#x20; 	"email": "john@example.com",
-
-&#x20; 	"password": "secret123"
-
-&#x09;}	
-
-
-
-
-
-
-
+```http
 POST /api/login HTTP/1.1
-
-│    │          │
-
-│    │          └─ HTTP version
-
-│    └─ Path (resource being accessed)
-
-└─ Method (what action to perform)
-
-
-
-
-
-
-
-#### Headers:
-
-&#x09;-These are the metadata about the requests, for one server can host multiple sites.
-
-&#x09;-It also identifies your browser and OS, and then might send response different for both.
-
-&#x09;	Mobile User-Agent → Simpler HTML
-
-&#x09;	Desktop User-Agent → Full-featured HTML
-
-
-
-&#x09;-It tells server what format you wants back, could be Application/json.
-
-&#x09;	Accept: application/json → Send me JSON
-
-&#x09;	Accept: text/html → Send me HTML
-
-&#x09;	Accept: image/png → Send me an image
-
-
-
-&#x09;-It tells server what format you're sending.
-
-&#x09;	Content-Type: application/json → Body is JSON
-
-&#x09;	Content-Type: application/x-www-form-urlencoded → Body is form data
-
-&#x09;	Content-Type: multipart/form-data → Body includes files (like photo upload)
-
-
-
-###### \-Cookie:session\_id=abc123; user\_pref=dark\_mode:
-
-&#x09;-These are small pieces of information the server asked your browser to remember.
-
-&#x09;-Sent automatically with every request.
-
-&#x09;-This is how server knows who the user is.
-
-
-
-
-
-
-
-
-
-### What Actually sits in an HTTP Response:
-
-&#x09;Date: Mon, 27 Jul 2024 12:28:53 GMT
-
-&#x09;Server: Apache/2.4.1
-
-&#x09;Content-Type: application/json
-
-&#x09;Content-Length: 128
-
-&#x09;Set-Cookie: session\_id=xyz789; Expires=Wed, 09 Jun 2025 10:18:14 GMT; HttpOnly; Secure
-
-&#x09;Cache-Control: no-cache, no-store, must-revalidate
-
-&#x09;Access-Control-Allow-Origin: https://trusted-site.com
-
-&#x09;{
-
-&#x20; 		"success": true,
-
-&#x20; 		"user": {
-
-&#x20;   		"id": 12345,
-
-&#x20;   		"name": "John Doe",
-
-&#x20;   		"email": "john@example.com"
-
-&#x20; 	},
-
-&#x20; 	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-&#x09;}
-
-
-
-
-
-&#x09;HTTP/1.1 200 OK
-
-&#x20;        │   │
-
-&#x20;        │   └─ Status message
-
-&#x20;        └─ Status code
-
-
-
-##### &#x09;Common Status Code:
-
-&#x09;	200 OK-Success 			Login Successful
-
-&#x09;	201 Created    			New User registered
-
-&#x09;	204 No Content			Deleted Successfully (no data to return)
-
-&#x09;	301 Moved Permanently		
-
-&#x09;	302 Temporary Redirect		Maintenance Mode
-
-&#x09;	400 Bad Request 		You sent invalid JSON
-
-&#x09;	401 Unauthorized 		You're not logged in
-
-&#x09;	403 Forbidden 			You're logged in but don't have permission
-
-&#x09;	404 Not Found 			Page doesn't exists
-
-&#x09;	429 Too many requests 		Rate limit exceeded
-
-&#x09;	500 Internal server error 	Server code crashed
-
-&#x09;	502 Bad Gateway 		Server is down/Unreachable
-
-&#x09;	503 Service Unavailable 	Server Overloaded 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Host: www.facebook.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Content-Type: application/json
+Content-Length: 57
+Cookie: session_id=abc123; user_pref=dark_mode
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+{
+  "email": "john@example.com",
+  "password": "secret123"
+}
+```
+
+Breakdown of the request line:
+
+```text
+POST /api/login HTTP/1.1
+|    |          |
+|    |          +-- HTTP version
+|    +-- Path (resource being accessed)
++-- Method (what action to perform)
+```
+
+### HTTP Methods (verbs) you should know:
+* `GET`  : read data (should not change state)
+* `POST` : create / trigger an action (usually changes state)
+* `PUT`  : replace a resource (idempotent)
+* `PATCH`: partial update
+* `DELETE`: delete
+
+Idempotency nuance:
+* **Idempotent** means "same request repeated produces the same final result." This matters for **retries**.
+  * `PUT /users/1` is typically idempotent.
+  * `POST /orders` is typically not.
+
+## Headers:
+Headers are metadata that control routing, negotiation, caching, auth, and security.
+
+### Common header categories:
+
+1. **Routing / Host**
+* `Host`: tells the server which domain you are trying to reach (important when one server hosts many sites).
+
+2. **Client identity / format negotiation**
+* `User-Agent`: identifies browser/app; servers can tailor responses.
+  * Mobile User-Agent -> simpler HTML or smaller images
+  * Desktop User-Agent -> full layout
+* `Accept`: what format you want back.
+  * `Accept: application/json` -> send JSON
+  * `Accept: text/html` -> send HTML
+  * `Accept: image/png` -> send an image
+* `Content-Type`: format of request body.
+  * `application/json`
+  * `application/x-www-form-urlencoded`
+  * `multipart/form-data` (file upload)
+
+3. **Authentication**
+* `Authorization: Bearer <token>` for JWT / OAuth access tokens.
+
+4. **Cookies**
+* `Cookie: session_id=...`
+* Cookies are small key/value pairs the browser stores and automatically sends to the server for matching domain/path rules.
+
+## What Actually Sits in an HTTP Response:
+```http
+HTTP/1.1 200 OK
+Date: Mon, 27 Jul 2024 12:28:53 GMT
+Server: Apache/2.4.1
+Content-Type: application/json
+Content-Length: 128
+Set-Cookie: session_id=xyz789; Expires=Wed, 09 Jun 2025 10:18:14 GMT; HttpOnly; Secure; SameSite=Lax
+Cache-Control: no-cache, no-store, must-revalidate
+Access-Control-Allow-Origin: https://trusted-site.com
+
+{
+  "success": true,
+  "user": {
+    "id": 12345,
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Status line breakdown:
+```text
+HTTP/1.1 200 OK
+        |   |
+        |   +-- Status message
+        +-- Status code
+```
+
+### Common Status Codes:
+* `200 OK`                   : success (read/login/etc.)
+* `201 Created`              : new resource created (user registered, order placed)
+* `204 No Content`           : success but no response body (delete)
+* `301 Moved Permanently`    : permanent redirect
+* `302 Found`                : temporary redirect (maintenance, A/B, etc.)
+* `400 Bad Request`          : invalid input/JSON
+* `401 Unauthorized`         : not authenticated
+* `403 Forbidden`            : authenticated but not allowed
+* `404 Not Found`            : route/resource not found
+* `409 Conflict`             : version conflict / duplicate (e.g., username exists)
+* `429 Too Many Requests`    : rate-limited
+* `500 Internal Server Error`: server bug/crash
+* `502 Bad Gateway`          : proxy/LB cannot reach upstream
+* `503 Service Unavailable`  : overloaded/maintenance, try later
+
+## Figure: What Happens When You Type a URL?
+This is the "full story" that interviewers like because it touches DNS, TLS, and the request lifecycle.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser/App
+  participant DNS as DNS Resolver
+  participant RP as Reverse Proxy / Load Balancer
+  participant API as App Server
+  participant DB as Database
+
+  B->>DNS: Resolve www.amazon.com
+  DNS-->>B: IP address
+  B->>RP: TCP connect (443)
+  B->>RP: TLS handshake (HTTPS)
+  B->>RP: HTTP request (GET /products/laptop?...)
+  RP->>API: Forward request (adds X-Forwarded-For, etc.)
+  API->>DB: Query / cache lookup
+  DB-->>API: Data
+  API-->>RP: HTTP response (200 + JSON/HTML)
+  RP-->>B: Response
+```
+
+## Helpful Subtopics (Commonly Asked With CSA)
+### 1. Reverse Proxy vs Load Balancer
+* **Reverse proxy** (e.g., Nginx): terminates TLS, routes requests, caching, compression, WAF rules.
+* **Load balancer**: distributes traffic across multiple servers and performs health checks.
+* In real systems, a reverse proxy often also acts like an L7 load balancer.
+
+### 2. Stateless vs Stateful Servers
+* **Stateless server**: does not store user session in its own memory; any server can handle any request (best for horizontal scaling).
+* **Stateful server**: stores session in memory; needs sticky sessions or shared session store to scale.
+
+### 3. Why "HTTP is Stateless" Matters
+* Each HTTP request is independent.
+* "Remembering the user" is implemented using **cookies/sessions/JWT**, not because HTTP automatically remembers anything.

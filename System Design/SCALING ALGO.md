@@ -1,458 +1,230 @@
 **SCALING ALGO:**
 
-\*\*1-ROUND ROBIN->\*\*It rotates through servers in order to distribute load evenly. Although it' fair with distribution and simple to implement, it doesn't consider server health or request complexities. It's better to use this, when all servers are identical and all requests are the same.
+This file focuses on **load balancing algorithms**: how a load balancer decides which server should handle a request.
 
-&#x09;Request 1 → Server 1
+Core goal:
+* Distribute load so no single server gets overloaded.
+* Keep latency low and availability high.
 
-&#x09;Request 2 → Server 2
+Before algorithms, remember:
+* A load balancer must also do **health checks** and stop sending traffic to unhealthy nodes.
+* Algorithms behave differently for:
+  * short requests vs long-lived connections (websocket/streaming)
+  * identical servers vs mixed-capacity servers
+  * stateless vs stateful systems
 
-&#x09;Request 3 → Server 3
+---
 
-&#x09;Request 4 → Server 1 (back to start)
+## Figure: Where Load Balancing Sits
+```mermaid
+flowchart TB
+  C[Clients] --> LB[Load Balancer]
+  LB --> S1[Server 1]
+  LB --> S2[Server 2]
+  LB --> S3[Server 3]
+```
 
-&#x09;Request 5 → Server 2
+---
 
-&#x09;...
+**1-ROUND ROBIN->**
+Rotates through servers in order to distribute requests evenly.
 
+Example:
+* Request 1 -> Server 1
+* Request 2 -> Server 2
+* Request 3 -> Server 3
+* Request 4 -> Server 1
 
+Pros:
+* Simple to implement and reason about.
+* Works fine when:
+  * servers have identical capacity
+  * requests are similar in cost
 
-2-\*\*LESAT CONNECTIONS->\*\*It sends the request to the server with least/fewest active connections. It balances actual load, not just request count. It is slightly more complex and also tracks connection state. It is better when requests have variable duration(file uploads, streaming).
+Cons:
+* Doesn't consider:
+  * server health (unless combined with health checks)
+  * server load (CPU/memory)
+  * request complexity (some requests are heavier than others)
 
-&#x09;Server 1: 50 connections
+When to use:
+* Stateless APIs with uniform traffic patterns.
 
-&#x09;Server 2: 30 connections ← Send here!
+---
 
-&#x09;Server 3: 45 connections
+**2-LEAST CONNECTIONS->**
+Sends the request to the server with the fewest active connections.
 
-3-**IP HASH(Sticky Sessions)->** It hash the user's IP Address then always sends the same user to same server. It is better for stateful apps, however if the server goes down the user loses session completely.
+Example state:
+* Server 1: 50 connections
+* Server 2: 30 connections ← send here
+* Server 3: 45 connections
 
-&#x09;User IP: 192.168.1.100
+Pros:
+* Better when requests have variable duration (file uploads, streaming, long polling).
+* Helps avoid sending new traffic to a server already "busy" with many open connections.
 
-&#x09;Hash: hash(192.168.1.100) % 3 = 1
+Cons / gotchas:
+* Needs per-server connection tracking.
+* "Fewest connections" isn't the same as "lowest CPU".
+  * One connection might be extremely expensive.
+* For HTTP/2, one TCP connection can multiplex many requests, which can distort "connection count" as a signal.
 
-&#x09;→ Always send to Server 1
+When to use:
+* Long-lived connections or uneven connection lifetimes.
 
+---
 
+**3-IP HASH (Sticky Sessions)->**
+Hashes the client IP and maps it to a server, so a user tends to hit the same server repeatedly.
 
-4-**WEIGHTED ROUND ROBIN->** It gives more traffic to servers with more weight i.e. strong servers are routed with more requests. It is beneficial when servers have different capacities.
+Example:
+* User IP: `192.168.1.100`
+* Hash: `hash(ip) % 3 = 1`
+* Always send to Server 1
 
-&#x09;Server 1 (16 cores): Weight = 4
+Pros:
+* Enables "stickiness" without server-side shared session store.
+* Can reduce cache misses if server has local cache.
 
-&#x09;Server 2 (8 cores):  Weight = 2
+Cons (important):
+* Not reliable identity:
+  * many users may share an IP (NAT, mobile carriers)
+  * user IP can change (mobile networks, VPN)
+* If a server dies, the mapping changes and the user may lose in-memory session state.
+* Can create uneven load if one IP range is more active.
 
-&#x09;Server 3 (4 cores):  Weight = 1
+When to use:
+* Legacy systems where introducing a shared session store is not feasible (short-term solution).
+
+Better alternatives:
+* Sticky cookie based routing (LB sets a cookie like `lb_route=...`)
+* Centralized session store (Redis)
+* Stateless auth (JWT)
+
+---
+
+**4-WEIGHTED ROUND ROBIN->**
+Assign weights to servers so higher-capacity servers get more traffic.
+
+Example weights:
+* Server 1 (16 cores): weight 4
+* Server 2 (8 cores) : weight 2
+* Server 3 (4 cores) : weight 1
 
 Distribution:
-
-&#x09;Server 1 gets 4/7 = 57% of traffic
-
-&#x09;Server 2 gets 2/7 = 29% of traffic
-
-&#x09;Server 3 gets 1/7 = 14% of traffic
-
-
-
-
-
-
-
-
-
-
-
-Part 5: Horizontal Scaling ->Pros \& Cons
-
-&#x09;Pros of Horizontal Scaling:
-
-&#x09;	1. No Ceiling (Infinite Scalability)
-
-&#x09;	2. High Availability (No Single Point of Failure)
-
-&#x09;	3. No Downtime During Scaling
-
-&#x09;	4. Cost Efficiency at Scale, Small servers cost less per unit capacity.
-
-&#x09;
-
-&#x09;Cons of Horizontal Scaling:
-
-&#x09;	1. Complexity (More Moving Parts)
-
-&#x09;		Vertical Scaling:
-
-&#x09;			1 server
-
-&#x09;			1 database
-
-&#x09;			1 thing to monitor
-
-&#x09;		Horizontal Scaling:
-
-&#x09;			1 load balancer
-
-&#x09;			10 servers
-
-&#x09;			1 database (shared)
-
-&#x09;			Health checks
-
-&#x09;			Auto-scaling rules
-
-&#x09;			Deployment pipelines
-
-&#x09;			Log aggregation from 10 sources
-
-&#x09;			Monitoring 10 servers
-
-&#x09;			= 10x complexity
-
-
-
-&#x09;	2. State Management Nightmare-> Problem: User session stored on Server 1, next request goes to Server 2.
-
-
-
-┌─────────┐  ┌─────────┐  ┌─────────┐
-
-│Server 1 │  │Server 2 │  │Server 3 │
-
-└────┬────┘  └────┬────┘  └────┬────┘
-
-&#x20;    │            │            │
-
-&#x20;    └────────────┼────────────┘
-
-&#x20;                 │
-
-&#x20;                 ▼
-
-&#x20;         ┌───────────────┐
-
-&#x20;         │  Redis Cache  │ ← Shared session storage
-
-&#x20;         │  (In-memory)  │
-
-&#x20;         └───────────────┘
-
-
-
-
-
-&#x09;	3. Data Consistency Challenges-> Problem: Multiple servers writing to same database.
-
-
-
-
-
-
-
-When to Use Horizontal Scaling-
-
-&#x09;Good for:
-
-&#x09;	Stateless applications (each request is independent)
-
-&#x09;	High traffic (millions of users)
-
-&#x09;	High availability requirements (99.99%+ uptime)
-
-&#x09;	Unpredictable traffic (viral potential)
-
-&#x09;	Cost optimization (auto-scaling)
-
-
-
-&#x09;Bad for:
-
-&#x09;	Early prototypes (over-engineering)
-
-&#x09;	Stateful systems (harder to distribute)
-
-&#x09;	Small teams (managing complexity)
-
-&#x09;	Tight budgets (load balancers, orchestration tools cost money)
-
-
-
-
-
-Part 6: The Hybrid Approach (Real-World Strategy)
-
-Most companies use BOTH vertical and horizontal scaling.
-
-The Pattern:
-
-┌──────────────────────────────────────────────┐
-
-│          LOAD BALANCER                       │
-
-└────────────┬─────────────────────────────────┘
-
-&#x20;            │
-
-&#x20;   ┌────────┼────────┐
-
-&#x20;   │        │        │
-
-&#x20;   ▼        ▼        ▼
-
-┌────────┐┌────────┐┌────────┐
-
-│Server 1││Server 2││Server 3│  ← Horizontal scaling
-
-│(Large) ││(Large) ││(Large) │  ← Each server is vertically scaled
-
-└───┬────┘└───┬────┘└───┬────┘
-
-&#x20;   │         │         │
-
-&#x20;   └─────────┼─────────┘
-
-&#x20;             │
-
-&#x20;             ▼
-
-&#x20;     ┌──────────────┐
-
-&#x20;     │  Database    │  ← Vertically scaled (powerful machine)
-
-&#x20;     │  (Beefy)     │
-
-&#x20;     └──────────────┘
-
-Why? Application Servers (Horizontal):
-
-&#x09;Stateless (easy to replicate)
-
-&#x09;Handle variable traffic
-
-&#x09;High availability
-
-
-
-Database (Vertical first, then horizontal):
-
-&#x09;Stateful (harder to distribute)
-
-&#x09;Vertical scaling until you hit limits
-
-&#x09;Then shard/replicate
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Q1: "Why doesn't everyone just use horizontal scaling?"
-
-❌ Bad answer: "Horizontal scaling is always better."
-
-✅ Good answer:
-
-"Horizontal scaling has trade-offs:
-
-
-
-Complexity cost: You need load balancers, orchestration (Kubernetes), distributed session management, and monitoring across many servers. For a small team or MVP, this is over-engineering.
-
-Stateful challenges: Not all applications are easily horizontally scalable. Databases, for example, require complex sharding and replication strategies.
-
-Actual cost: While horizontal scaling can be cheaper at massive scale with auto-scaling, at small scale, managing 10 cheap servers costs more than 1 powerful server when you factor in:
-
-
-
-Load balancer costs
-
-DevOps time
-
-Monitoring tools
-
-Complexity overhead
-
-
-
-Diminishing returns: If your bottleneck is the database (common), adding more app servers doesn't help. You need to scale the database, which is harder.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Q2: "How do you handle sessions in horizontal scaling?"
-
-✅ Good answer:
-
-"There are three approaches:
-
-1\. Sticky sessions (least recommended):
-
-
-
-Load balancer routes user to same server
-
-Pros: Simple, no code changes
-
-Cons: Uneven load, session loss if server dies
-
-
-
-2\. Centralized session store (recommended):
-
-
-
-Store sessions in Redis/Memcached
-
-All servers read/write from shared store
-
-Pros: Any server can handle any request, sessions survive server crashes
-
-Cons: Redis becomes single point of failure (mitigate with Redis replication)
-
-
-
-3\. JWT tokens (modern approach):
-
-
-
-No server-side session at all
-
-User info encoded in signed token, stored in client
-
-Server validates signature on each request
-
-Pros: Truly stateless, scales infinitely
-
-Cons: Can't invalidate tokens (until expiry), token size limits
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Q3: "Your server is at 80% CPU. Do you scale vertically or horizontally?"
-
-❌ Bad answer: "Add more servers."
-
-✅ Good answer:
-
-"First, I'd diagnose WHY CPU is high:
-
-Step 1: Profile the application
-
-
-
-Is it a code inefficiency? (Fix the bug, don't scale)
-
-Is it a database query? (Add index, don't scale servers)
-
-Is it legitimate traffic? (Then scale)
-
-
-
-Step 2: If legitimate traffic, decide based on:
-
-Scale VERTICALLY if:
-
-
-
-This is a temporary spike (one-time event)
-
-We're early-stage (< 10,000 DAU)
-
-Quick fix needed (vertical scaling takes 10 minutes)
-
-
-
-Scale HORIZONTALLY if:
-
-
-
-Traffic is sustained/growing
-
-We need high availability
-
-We're already on a large instance
-
-Budget allows for infrastructure investment
-
-
-
-Step 3: Monitor after scaling
-
-
-
-Did it solve the problem?
-
-Is database now the bottleneck?
-
-Set up auto-scaling for next time
-
-
-
-The key is: scaling is the LAST resort, not the first. Optimize first, scale second."
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* Server 1 gets 4/7 ~= 57%
+* Server 2 gets 2/7 ~= 29%
+* Server 3 gets 1/7 ~= 14%
+
+Pros:
+* Works well when servers are not identical (mixed instance types).
+* Simple, deterministic distribution.
+
+Cons:
+* Weights are static unless you implement dynamic weight adjustments.
+* Still not directly aware of real-time CPU or request cost.
+
+When to use:
+* Heterogeneous fleets, or during gradual migrations where some nodes are bigger.
+
+---
+
+## Additional Useful Algorithms (Common in Real Systems)
+
+**5-LEAST RESPONSE TIME->**
+Routes to the server with the lowest measured latency (often combined with active requests).
+
+Pros:
+* Adapts to hotspots and slow nodes.
+
+Cons:
+* Needs measurement windows; can be noisy.
+* Can cause oscillations if not smoothed (everyone routes to "fastest", then it becomes slow).
+
+**6-RANDOM / POWER OF TWO CHOICES->**
+* Random: pick any server randomly.
+* Power of two choices: pick two random servers, choose the less loaded one.
+
+Why it's surprisingly good:
+* Power-of-two is simple and often close to least-connections quality with much less tracking overhead.
+
+**7-CONSISTENT HASHING (common for caches)->**
+Hash a key (user_id, session_id, cache_key) to a node using a consistent hash ring.
+
+Pros:
+* When nodes are added/removed, only a fraction of keys move.
+* Great for distributed caches (memcached/redis client-side sharding).
+
+Cons:
+* Needs careful handling of hot keys.
+* Still needs health-aware re-routing.
+
+---
+
+## Health Checks (Non-Negotiable)
+No algorithm matters if you send traffic to unhealthy servers.
+
+Types:
+* **Liveness**: "is the process up?" (fast, shallow)
+* **Readiness**: "can it serve requests?" (checks dependencies, warmup, etc.)
+
+Failure modes:
+* If health checks are too aggressive -> flapping (servers repeatedly removed/added)
+* If too slow -> you send traffic to dead nodes for too long
+
+---
+
+Part: Horizontal Scaling -> Pros & Cons (How Algorithms Fit In)
+
+Pros of horizontal scaling:
+1. No ceiling (you can add more nodes)
+2. High availability (no single node failure brings you down)
+3. More elasticity (autoscaling)
+4. Cost efficiency at large scale (many small nodes can be cheaper than one huge node)
+
+Cons of horizontal scaling (the real reasons it's hard):
+1. Complexity (more moving parts):
+   * load balancer
+   * health checks
+   * autoscaling policies
+   * deployments across many nodes
+   * observability (logs/metrics/traces)
+2. State management nightmare:
+   * sessions and in-memory caches don't automatically move between servers
+3. Data consistency challenges:
+   * multiple servers concurrently writing to shared DB
+
+## Figure: Shared Session Store Fixes "State"
+```mermaid
+flowchart TB
+  LB[Load Balancer] --> S1[Server 1]
+  LB --> S2[Server 2]
+  LB --> S3[Server 3]
+  S1 --> R[(Redis)]
+  S2 --> R
+  S3 --> R
+  R --> DB[(Database)]
+```
+
+---
+
+Q&A (Interview style)
+
+**Q1: "Why doesn't everyone just use horizontal scaling?"**
+Good answer:
+* Horizontal scaling adds complexity cost:
+  * load balancers, orchestration (Kubernetes), distributed sessions, monitoring
+* Not every system scales horizontally easily (databases are the classic example).
+* Sometimes you're bottlenecked elsewhere (DB, upstream dependency), so adding app servers doesn't help.
+
+**Q2: "How do you handle sessions in horizontal scaling?"**
+Good answer: 3 common approaches:
+1. Sticky sessions (least recommended long-term)
+2. Central session store (recommended for server-side sessions): Redis/Memcached
+3. JWT tokens (stateless): validate signature each request
+
+**Q3: "When should I use least-connections vs round-robin?"**
+Good answer:
+* Round robin: uniform, short requests, identical servers
+* Least connections: variable duration/streaming, long-lived connections

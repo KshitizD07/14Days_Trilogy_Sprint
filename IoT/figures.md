@@ -1,178 +1,233 @@
-# IoT Exam Figures & Architectures
+# IoT Exam Figures & Architectures (Comprehensive Version)
 
-This document contains all the essential architectural diagrams and models for your IoT exam, specifically tailored to the syllabus and your module notes. These diagrams are written using `mermaid.js`, which renders natively on GitHub. Memorize these diagrams to score full marks (6M) in architecture and model-related questions!
+This document contains all the essential architectural diagrams and models for your IoT exam. These diagrams use a simplified `mermaid.js` syntax to ensure 100% rendering compatibility on GitHub and include professional styling.
 
 ---
 
-## Part 1: Introduction to IoT
-
-### 1. IoT Logical Design (Functional Blocks)
-This diagram illustrates the logical functional blocks of an IoT system. Use this when asked about the **Logical Design of IoT** or **IoT Functional Blocks**.
+## 1. IoT Logical Design (Functional Blocks)
+Use this when asked about the **Functional Blocks of an IoT System**.
+*Color theme: Professional Blue/Gray*
 
 ```mermaid
 graph TD
-    subgraph IoT System Functional Blocks
-        A[Application Block]
-        B[Management Block]
-        C[Services Block]
-        D[Communication Block]
-        E[Security Block]
-        F[Device Block]
+    subgraph IoT_System[IoT System Functional Blocks]
+        APP[Application Block]
+        MGMT[Management Block]
+        SRV[Services Block]
+        COMM[Communication Block]
+        SEC[Security Block]
+        DEV[Device Block]
     end
 
-    F <--> D
-    D <--> C
-    C <--> A
+    DEV <--> COMM
+    COMM <--> SRV
+    SRV <--> APP
     
-    %% Management and Security interact with all layers
-    B -.-> A & C & D & F
-    E -.-> A & C & D & F
+    MGMT -.-> APP
+    MGMT -.-> SRV
+    MGMT -.-> COMM
+    MGMT -.-> DEV
     
-    classDef block fill:#f9f,stroke:#333,stroke-width:2px;
-    class A,B,C,D,E,F block;
+    SEC -.-> APP
+    SEC -.-> SRV
+    SEC -.-> COMM
+    SEC -.-> DEV
+    
+    style APP fill:#d1e8ff,stroke:#004a99,stroke-width:2px
+    style SRV fill:#d1e8ff,stroke:#004a99,stroke-width:2px
+    style COMM fill:#d1e8ff,stroke:#004a99,stroke-width:2px
+    style DEV fill:#d1e8ff,stroke:#004a99,stroke-width:2px
+    style MGMT fill:#e1e1e1,stroke:#333,stroke-width:2px
+    style SEC fill:#e1e1e1,stroke:#333,stroke-width:2px
 ```
 
 ---
 
-### 2. IoT Communication Models
-These are the most common ways IoT devices and servers communicate.
-
-#### A. Request-Response Model (e.g., HTTP/REST)
-```mermaid
-sequenceDiagram
-    participant Client as IoT Client
-    participant Server as IoT Server
-    Client->>Server: 1. Request (e.g., GET /temperature)
-    activate Server
-    Note over Server: Processes Request<br/>Fetches Data
-    Server-->>Client: 2. Response (e.g., 25°C)
-    deactivate Server
-```
-
-#### B. Publish-Subscribe Model (e.g., MQTT)
-```mermaid
-sequenceDiagram
-    participant Pub as Publisher (Temperature Sensor)
-    participant Broker as MQTT Broker
-    participant Sub as Subscriber (Mobile App)
-    
-    Sub->>Broker: 1. Subscribe to topic: "home/temp"
-    Note over Pub,Broker: Sensor reads data
-    Pub->>Broker: 2. Publish "25°C" on topic: "home/temp"
-    Broker->>Sub: 3. Forward message "25°C"
-```
-
----
-
-### 3. Common IoT Layered Architectures
-Use this when asked about the **Physical Architecture**, **Protocol Stack**, or **Layered Design**.
+## 2. Physical Design: Generic IoT Device Block Diagram
+Use this when asked about the **Physical Design** or **IoT Node Components**.
 
 ```mermaid
 graph LR
-    subgraph 3-Layer Architecture
-    direction TB
-    A3[Application Layer] --- N3[Network Layer] --- P3[Perception Layer]
+    subgraph IoT_Device[Generic IoT Device]
+        CPU[CPU / Controller]
+        MEM[Memory / RAM]
+        STR[Storage / Flash]
+        IO[I/O Interfaces - UART/SPI/I2C]
+        PWR[Power Source]
     end
-    
-    subgraph 5-Layer Architecture
-    direction TB
-    B5[Business Layer] --- A5[Application Layer] --- M5[Processing/Middleware Layer] --- T5[Transport Layer] --- P5[Perception Layer]
-    end
+
+    CPU --- MEM
+    CPU --- STR
+    CPU --- IO
+    CPU --- PWR
+
+    IO --- SENSORS[Sensors]
+    IO --- ACTUATORS[Actuators]
+    IO --- TRANS[Transceivers / Wireless]
+
+    style CPU fill:#f9f9f9,stroke:#333,stroke-width:3px
+    style SENSORS fill:#fff2cc,stroke:#d6b656
+    style ACTUATORS fill:#fff2cc,stroke:#d6b656
+    style TRANS fill:#dae8fc,stroke:#6c8ebf
 ```
 
 ---
 
-## Part 2: M2M to IoT - The Vision & Architecture Overview
-
-### 4. M2M vs IoT Value Chain
-A crucial distinction showing the shift from siloed (M2M) to ecosystem-driven (IoT) models.
+## 3. IoT Layered Architectures (Evolution)
+Use this to compare the **3-Layer, 4-Layer, and 5-Layer models**.
 
 ```mermaid
 graph TD
-    subgraph M2M Value Chain (Linear & Siloed)
-        M1[Hardware / Device] --> M2[Network Provider] --> M3[System Integrator] --> M4[Single Application]
+    subgraph Three_Layer[3-Layer Model]
+        L3A[Application]
+        L3N[Network]
+        L3P[Perception]
+        L3A --- L3N --- L3P
     end
 
-    subgraph IoT Value Chain (Networked & Data-Driven)
-        I1[Smart Devices & Sensors] <--> I2[Connectivity / Network]
-        I2 <--> I3[Cloud Platform / Data Analytics]
-        I3 <--> I4[Smart Home App]
-        I3 <--> I5[Smart Healthcare App]
-        I3 <--> I6[Smart City App]
+    subgraph Four_Layer[4-Layer Model]
+        L4A[Application]
+        L4S[Service / Support]
+        L4N[Network]
+        L4P[Perception]
+        L4A --- L4S --- L4N --- L4P
     end
-    
-    style M4 fill:#ffcccc,stroke:#333
-    style I4 fill:#ccffcc,stroke:#333
-    style I5 fill:#ccffcc,stroke:#333
-    style I6 fill:#ccffcc,stroke:#333
+
+    subgraph Five_Layer[5-Layer Model]
+        L5B[Business]
+        L5A[Application]
+        L5M[Middleware / Processing]
+        L5T[Transport]
+        L5P[Perception]
+        L5B --- L5A --- L5M --- L5T --- L5P
+    end
 ```
 
 ---
 
-## Part 3: IoT Reference Architecture
-
-### 5. Architectural Views of IoT
-When asked about the **Reference Architecture Views**, use this structure to explain how the architecture is divided into different functional perspectives.
+## 4. IoT Protocol Stack vs. OSI Model
+Essential for **"IoT Networking Basics"** or **"IoT Protocol Stack"** questions.
 
 ```mermaid
-mindmap
-  root((IoT Reference<br/>Architecture Views))
-    Functional View
-      (Defines functional components<br/>e.g., Device, Communication)
-    Information View
-      (Defines data flow, structure,<br/>and information lifecycle)
-    Operational View
-      (Defines how the system is managed,<br/>monitored, and controlled)
-    Deployment View
-      (Defines physical components,<br/>topology, and network deployment)
-```
-
----
-
-## Part 4: IoT Enablers & Networking
-
-### 6. Wireless Sensor Network (WSN) & IoT Gateway
-Use this to explain **WSN Architecture** and the **Role of an IoT Gateway**.
-
-```mermaid
-graph TD
-    subgraph Wireless Sensor Network (Edge)
-        S1((Sensor Node 1)) --> Gateway[IoT Gateway]
-        S2((Sensor Node 2)) --> Gateway
-        S3((Sensor Node 3)) --> Gateway
-        S4((Sensor Node 4)) --> Gateway
+graph LR
+    subgraph OSI_Model[OSI Model]
+        O7[Application]
+        O6[Presentation]
+        O5[Session]
+        O4[Transport]
+        O3[Network]
+        O2[Data Link]
+        O1[Physical]
     end
-    
-    Gateway -- "Translates Protocols & Aggregates Data" --> Internet((Internet / WAN))
-    Internet --> Cloud[Cloud Server / Database]
-    Cloud --> App[User Dashboard / Analytics]
+
+    subgraph IoT_Stack[IoT Protocol Stack]
+        I_APP[App: MQTT / CoAP / HTTP]
+        I_SEC[Security: TLS/SSL / DTLS]
+        I_TRANS[Transport: TCP / UDP]
+        I_NET[Network: IPv6 / 6LoWPAN]
+        I_LINK[Link: IEEE 802.15.4 / WiFi / BLE]
+    end
+
+    O7 --- I_APP
+    O6 --- I_APP
+    O5 --- I_APP
+    O4 --- I_TRANS
+    O3 --- I_NET
+    O2 --- I_LINK
+    O1 --- I_LINK
 ```
 
 ---
 
-## Part 5: Domain-Specific Applications of IoT
-
-### 7. Smart Home Automation Architecture
-A standard example of a domain-specific IoT deployment.
+## 5. M2M vs. IoT: Architectural Shift
+(Fixed rendering for GitHub)
 
 ```mermaid
 graph TD
-    subgraph Home Environment (Perception & Local Network)
-        Light[Smart Light Bulb] -. "Zigbee" .-> Hub[Smart Home Hub]
-        Thermo[Smart Thermostat] -. "Z-Wave" .-> Hub
-        Lock[Smart Door Lock] -. "BLE" .-> Hub
+    subgraph M2M_Silo[M2M: Siloed / Stovepipe Architecture]
+        M_HW[Device] --> M_NET[Network] --> M_APP[Dedicated App]
     end
-    
-    Hub -- "Wi-Fi / Ethernet" --> Router[Home Internet Router]
-    Router -- "Internet" --> Cloud[IoT Cloud Platform]
-    
-    subgraph Remote Application
-        Cloud <--> Mobile[User's Mobile App]
+
+    subgraph IoT_Ecosystem[IoT: Horizontal / Open Architecture]
+        D1[Device 1] --- P[Common Platform]
+        D2[Device 2] --- P
+        D3[Device 3] --- P
+        P --- A1[App A]
+        P --- A2[App B]
+        P --- A3[App C]
     end
 ```
 
 ---
-**Tips for the Exam:**
-- Whenever a 6-mark question asks for "Architecture", "Design", or "Functional Blocks", **draw the corresponding block diagram first**.
-- Label the protocols (like MQTT, HTTP, Zigbee, BLE) clearly on the arrows, as examiners look for these keywords.
-- For "M2M vs IoT", always visually contrast the "Linear/Silo" approach with the "Ecosystem/Platform" approach.
+
+## 6. IoT Reference Architecture: The 4 Views
+Use this for **"Architectural Views of IoT"**.
+
+```mermaid
+graph TD
+    ROOT((IoT Reference Architecture))
+    
+    ROOT --- FV[Functional View]
+    ROOT --- IV[Information View]
+    ROOT --- OV[Operational View]
+    ROOT --- DV[Deployment View]
+
+    FV --- FV_D[What the system does]
+    IV --- IV_D[Data models & Flow]
+    OV --- OV_D[Management & Control]
+    DV --- DV_D[Physical deployment]
+
+    style ROOT fill:#f5f5f5,stroke:#333,stroke-width:2px
+```
+
+---
+
+## 7. WSN Architecture & IoT Gateway
+(Fixed rendering for GitHub)
+
+```mermaid
+graph LR
+    subgraph Edge_Network[WSN / Local Network]
+        N1[Sensor 1] --- GW[IoT Gateway]
+        N2[Sensor 2] --- GW
+        N3[Sensor 3] --- GW
+    end
+    
+    GW -- "Protocol Translation" --> INTERNET((Internet))
+    INTERNET --> CLOUD[Cloud Platform]
+    CLOUD --> USER[User App]
+
+    style GW fill:#ffebcc,stroke:#d79b00
+    style CLOUD fill:#e1d5e7,stroke:#9673a6
+```
+
+---
+
+## 8. Domain Application: Smart Home
+(Fixed rendering for GitHub)
+
+```mermaid
+graph TD
+    subgraph Devices[Smart Devices]
+        L[Light]
+        T[Thermostat]
+        C[Camera]
+    end
+
+    subgraph Local[Home Network]
+        H[Home Hub / Router]
+    end
+
+    L --- H
+    T --- H
+    C --- H
+
+    H -- "WAN" --> C_SRV[Cloud Service]
+    C_SRV --- APP[User Phone]
+```
+
+---
+**Cheat Sheet for Full Marks:**
+1. **Always label layers:** Mention protocols like 6LoWPAN, MQTT, and 802.15.4.
+2. **Horizontal vs Vertical:** For M2M to IoT questions, highlight that M2M is vertical (siloed) and IoT is horizontal (layered/open).
+3. **Reference Model:** If asked for ITU-T, use the 4-layer model (Application, Service & Application Support, Network, Device).

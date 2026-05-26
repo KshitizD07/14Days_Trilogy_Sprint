@@ -400,3 +400,134 @@ The time complexity depends heavily on the initial order of the elements.
 
 *   **Average-Case Complexity: O(n^2)**
     On average, for a randomly ordered array, an element `A[i]` will be smaller than half of the elements in the sorted sub-array `A[1..i-1]`. Thus, the inner loop will execute about `i/2` times. The total number of operations will be approximately half of the worst-case, which is `(n(n-1)/2) / 2 = n^2/4`. Asymptotically, constants are ignored, resulting in a time complexity of `O(n^2)`.
+
+---
+
+## Q12: What is bubble sort? Perform selection sort on the following set of elements: 50, 55, 20, 45, 17, 25, 28, 30 (10 Marks)
+
+**Answer:**
+
+**Bubble Sort:**
+Bubble sort is a simple comparison-based sorting algorithm. It repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. The pass through the list is repeated until the list is sorted. The algorithm gets its name because smaller elements "bubble" to the top of the list (or larger elements bubble to the end).
+
+*   **Time Complexity of Bubble Sort:**
+    *   **Best Case:** `O(n)` (when the array is already sorted and an optimized version with a 'swapped' flag is used).
+    *   **Average & Worst Case:** `O(n^2)` (requires nested loops traversing the array `n` times).
+
+**Selection Sort on {50, 55, 20, 45, 17, 25, 28, 30}:**
+Selection sort divides the array into two parts: a sorted subarray and an unsorted subarray. It repeatedly finds the minimum element from the unsorted subarray and puts it at the end of the sorted subarray.
+
+*   **Initial Array:** [50, 55, 20, 45, 17, 25, 28, 30]
+*   **Pass 1:** Find min in [50...30] -> min is 17. Swap with first element (50).
+    *   Array: [**17**, 55, 20, 45, 50, 25, 28, 30]
+*   **Pass 2:** Find min in [55...30] -> min is 20. Swap with second element (55).
+    *   Array: [**17, 20**, 55, 45, 50, 25, 28, 30]
+*   **Pass 3:** Find min in [55...30] -> min is 25. Swap with third element (55).
+    *   Array: [**17, 20, 25**, 45, 50, 55, 28, 30]
+*   **Pass 4:** Find min in [45...30] -> min is 28. Swap with fourth element (45).
+    *   Array: [**17, 20, 25, 28**, 50, 55, 45, 30]
+*   **Pass 5:** Find min in [50...30] -> min is 30. Swap with fifth element (50).
+    *   Array: [**17, 20, 25, 28, 30**, 55, 45, 50]
+*   **Pass 6:** Find min in [55...50] -> min is 45. Swap with sixth element (55).
+    *   Array: [**17, 20, 25, 28, 30, 45**, 55, 50]
+*   **Pass 7:** Find min in [55, 50] -> min is 50. Swap with seventh element (55).
+    *   Array: [**17, 20, 25, 28, 30, 45, 50**, 55]
+
+The array is now fully sorted.
+
+---
+
+## Q13: Perform heap sort on the following set of elements: 6, 10, 5, 12, 3, 9, 20, 15, 8, 18 (10 Marks)
+
+**Answer:**
+
+**Heap Sort Algorithm:**
+Heap sort involves two main phases:
+1.  **Build Max Heap:** Rearrange the array into a valid Max Heap structure (where the parent is always greater than or equal to its children).
+2.  **Extract & Heapify:** Repeatedly swap the root (maximum element) with the last element of the heap, reduce the heap size by 1, and 'Heapify' the new root to maintain the max-heap property.
+
+**Given Array:** [6, 10, 5, 12, 3, 9, 20, 15, 8, 18]
+
+**Phase 1: Build Max Heap**
+We process non-leaf nodes from bottom to top (index `n/2 - 1` down to `0`).
+*   Initial Tree: Root=6. Children of 6: 10, 5. Children of 10: 12, 3. Children of 5: 9, 20. Children of 12: 15, 8. Children of 3: 18.
+*   **Heapify at 3 (val 3, index 4):** Swap 3 with max child (18). Array: [6, 10, 5, 12, **18**, 9, 20, 15, 8, **3**]
+*   **Heapify at 12 (val 12, index 3):** Swap 12 with max child (15). Array: [6, 10, 5, **15**, 18, 9, 20, **12**, 8, 3]
+*   **Heapify at 5 (val 5, index 2):** Swap 5 with max child (20). Array: [6, 10, **20**, 15, 18, 9, **5**, 12, 8, 3]
+*   **Heapify at 10 (val 10, index 1):** Max child is 18. Swap 10 and 18. Array: [6, **18**, 20, 15, **10**, 9, 5, 12, 8, 3]
+*   **Heapify at 6 (val 6, index 0):** Max child is 20. Swap 6 and 20. Array: [**20**, 18, **6**, 15, 10, 9, 5, 12, 8, 3]. Heapify down on 6 -> swap with 9. Array: [20, 18, **9**, 15, 10, **6**, 5, 12, 8, 3].
+
+**Max Heap built:** [20, 18, 9, 15, 10, 6, 5, 12, 8, 3]
+
+**Phase 2: Extract & Heapify (Sorting)**
+*   **Extract 20:** Swap 20 with last element (3). Array: [**3**, 18, 9, 15, 10, 6, 5, 12, 8 | **20**].
+    *   Heapify(3): Swap 3 with 18, then 3 with 15, then 3 with 12. Array: [18, 15, 9, 12, 10, 6, 5, 3, 8 | **20**]
+*   **Extract 18:** Swap 18 with 8. Array: [**8**, 15, 9, 12, 10, 6, 5, 3 | **18, 20**].
+    *   Heapify(8): Swap 8 with 15, then 8 with 12. Array: [15, 12, 9, 8, 10, 6, 5, 3 | **18, 20**]
+*   **Extract 15:** Swap 15 with 3. Array: [**3**, 12, 9, 8, 10, 6, 5 | **15, 18, 20**].
+    *   Heapify(3): Swap 3 with 12, then 3 with 10. Array: [12, 10, 9, 8, 3, 6, 5 | **15...**]
+*   **Extract 12:** Swap 12 with 5. Array: [**5**, 10, 9, 8, 3, 6 | **12...**].
+    *   Heapify(5): Swap 5 with 10, then 5 with 8. Array: [10, 8, 9, 5, 3, 6 | **12...**]
+*   **Extract 10:** Swap 10 with 6. Array: [**6**, 8, 9, 5, 3 | **10...**].
+    *   Heapify(6): Swap 6 with 9. Array: [9, 8, 6, 5, 3 | **10...**]
+*   **Extract 9:** Swap 9 with 3. Array: [**3**, 8, 6, 5 | **9...**].
+    *   Heapify(3): Swap 3 with 8, then 3 with 5. Array: [8, 5, 6, 3 | **9...**]
+*   **Extract 8:** Swap 8 with 3. Array: [**3**, 5, 6 | **8...**].
+    *   Heapify(3): Swap 3 with 6. Array: [6, 5, 3 | **8...**]
+*   **Extract 6:** Swap 6 with 3. Array: [**3**, 5 | **6...**].
+    *   Heapify(3): Swap 3 with 5. Array: [5, 3 | **6...**]
+*   **Extract 5:** Swap 5 with 3. Array: [**3** | **5...**].
+
+**Final Sorted Array:** [3, 5, 6, 8, 9, 10, 12, 15, 18, 20]
+
+---
+
+## Q14: Write down the algorithm for finding maximum and minimum element with the help of divide and conquer. (10 Marks)
+
+**Answer:**
+
+**Max-Min Divide and Conquer Approach:**
+Instead of finding the maximum and minimum sequentially (which takes `2n - 2` comparisons), the divide and conquer approach splits the array into two halves, recursively finds the max and min in each half, and then combines them.
+
+**Algorithm:**
+```text
+MAX-MIN(A, low, high, max, min)
+1.  if low == high // Base Case 1: Only 1 element
+2.      max = A[low]
+3.      min = A[low]
+4.  else if low == high - 1 // Base Case 2: Only 2 elements
+5.      if A[low] < A[high]
+6.          max = A[high]
+7.          min = A[low]
+8.      else
+9.          max = A[low]
+10.         min = A[high]
+11. else // Recursive Case: More than 2 elements
+12.     mid = (low + high) / 2
+13.     MAX-MIN(A, low, mid, max1, min1)
+14.     MAX-MIN(A, mid + 1, high, max2, min2)
+15.     // Combine solutions
+16.     if max1 > max2
+17.         max = max1
+18.     else
+19.         max = max2
+20.     if min1 < min2
+21.         min = min1
+22.     else
+23.         min = min2
+```
+
+**Time Complexity Analysis:**
+Let `T(n)` be the number of comparisons for an array of size `n`.
+*   If `n = 1`, `T(n) = 0`
+*   If `n = 2`, `T(n) = 1`
+*   If `n > 2`, `T(n) = 2T(n/2) + 2` (2 recursive calls + 2 comparisons in the combine step).
+
+Solving this recurrence:
+`T(n) = 2T(n/2) + 2`
+`T(n) = 2(2T(n/4) + 2) + 2 = 4T(n/4) + 4 + 2`
+`T(n) = 2^k T(n/2^k) + 2^k + 2^(k-1) + ... + 2`
+Assuming `n = 2^k` (so `k = log2 n`):
+The base case stops at size 2 (not 1 to minimize comparisons).
+Number of comparisons `T(n) = (3n/2) - 2`.
+This is significantly more efficient than the naive `2n - 2` comparisons approach, even though the asymptotic Big-O time complexity remains `O(n)`.

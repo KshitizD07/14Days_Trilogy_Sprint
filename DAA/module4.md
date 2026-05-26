@@ -210,3 +210,80 @@ GREEDY-SET-COVER(U, S)
 **Approximation Ratio:**
 This greedy algorithm does not guarantee the absolute minimum number of subsets. However, it is mathematically proven to have an approximation ratio of `H(d)`, where `d` is the size of the largest subset, and `H(n)` is the n-th harmonic number (roughly `ln(n)`).
 This means if the true optimal solution requires `OPT` subsets, the greedy algorithm will pick at most `OPT * ln(|U|)` subsets. While not perfect, it runs very fast (in polynomial time) and gives a bound on how "bad" the answer can be.
+
+---
+
+## Q6: Working modulo q = 11, how many spurious hits does the Rabin-Karp matcher encounter in the text T = 31415926 when looking for the pattern P = 26. (10 Marks Context)
+
+**Answer:**
+
+**Rabin-Karp Matcher Spurious Hits:**
+In the Rabin-Karp algorithm, a "hit" occurs when the hash value of a substring in the text matches the hash value of the pattern.
+A **"spurious hit"** is a false positive: the hash values match, but the actual string characters do not match.
+
+**Given:**
+Text `T = 31415926`
+Pattern `P = 26`
+Modulo `q = 11`
+Since the text and pattern are digits, our alphabet size `d = 10`.
+
+**Step 1: Calculate the hash of Pattern P:**
+Hash(P) = P mod q = 26 mod 11 = **4**
+
+**Step 2: Calculate the hash of every window of length 2 in Text T:**
+We will slide a window of size 2 across `T` and calculate its value modulo 11.
+*   **Window 1 ("31"):** 31 mod 11 = **9** (Mismatch: 9 != 4)
+*   **Window 2 ("14"):** 14 mod 11 = **3** (Mismatch: 3 != 4)
+*   **Window 3 ("41"):** 41 mod 11 = **8** (Mismatch: 8 != 4)
+*   **Window 4 ("15"):** 15 mod 11 = **4** (Hash Match: 4 == 4!)
+    *   *Check characters:* "15" != "26". This is a **Spurious Hit**.
+*   **Window 5 ("59"):** 59 mod 11 = **4** (Hash Match: 4 == 4!)
+    *   *Check characters:* "59" != "26". This is a **Spurious Hit**.
+*   **Window 6 ("92"):** 92 mod 11 = **4** (Hash Match: 4 == 4!)
+    *   *Check characters:* "92" != "26". This is a **Spurious Hit**.
+*   **Window 7 ("26"):** 26 mod 11 = **4** (Hash Match: 4 == 4!)
+    *   *Check characters:* "26" == "26". This is an **Exact Match** (Valid hit).
+
+**Result:**
+The Rabin-Karp matcher encounters exactly **3 spurious hits** (at substrings "15", "59", and "92") before finding the exact match at "26".
+
+---
+
+## Q7: Suggest an approximation algorithm for TSP. Assume that the cost function satisfies the triangle inequality. (10 Marks)
+
+**Answer:**
+
+**TSP with Triangle Inequality:**
+The general Travelling Salesman Problem cannot be approximated within any constant factor unless P = NP. However, if the cost function (distances) satisfies the **triangle inequality** (i.e., for any three cities A, B, C, the distance `dist(A,C) <= dist(A,B) + dist(B,C)`), there is a simple 2-approximation algorithm.
+This means the path found will be at most twice the length of the absolute shortest optimal path.
+
+**Approximation Algorithm (Based on Minimum Spanning Tree):**
+
+```text
+APPROX-TSP-TOUR(G, c) // Graph G, cost function c
+1. Select an arbitrary vertex r as a "root" vertex.
+2. Compute a Minimum Spanning Tree (MST) T for G from root r using Prim's algorithm.
+3. Let L be the list of vertices visited in a preorder tree walk of T.
+4. Return the Hamiltonian cycle H that visits the vertices in the order L.
+```
+
+**Step-by-step Explanation & Example:**
+1.  **Find MST:** We first find a Minimum Spanning Tree of the graph. We know the cost of the MST is less than or equal to the cost of the optimal TSP tour (because removing any edge from the optimal tour leaves a spanning tree).
+2.  **Preorder Walk:** We traverse the MST using a Depth-First Search (preorder walk). This creates a path that visits every node, but it will traverse some edges twice (going down the tree and backing up).
+    *   Cost of this full walk = `2 * Cost(MST)`.
+3.  **Shortcut (Bypass):** The walk from step 2 is not a valid TSP tour because it visits cities multiple times. We create the final tour by traversing the list and skipping (shortcutting) any city we have already visited, going directly to the next unvisited city in the preorder traversal.
+4.  **Triangle Inequality Guarantee:** Because of the triangle inequality, taking a direct shortcut between two cities is never longer than going through an intermediate city. Therefore, shortcutting the duplicate visits only *decreases* (or maintains) the total cost.
+5.  **Conclusion:** The final tour cost is less than or equal to `2 * Cost(MST)`, which is `<= 2 * Cost(Optimal Tour)`.
+
+**Example:**
+*   **Graph:** Cities A, B, C, D on a 2D plane (Euclidean distance satisfies triangle inequality).
+*   **MST:** Suppose MST edges are (A,B), (B,C), (B,D). Root is A.
+*   **Preorder Walk of MST:** A -> B -> C -> (back to B) -> D -> (back to B) -> (back to A).
+*   **Shortcut to Form Cycle:**
+    *   Start A.
+    *   Next is B. Path: A->B
+    *   Next is C. Path: A->B->C
+    *   Next in walk is B (already visited, skip!).
+    *   Next is D. Path: A->B->C->D
+    *   End: return to start A. Final Cycle: **A->B->C->D->A**.
+This cycle is guaranteed to be within a factor of 2 of the optimal.

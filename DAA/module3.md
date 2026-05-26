@@ -237,3 +237,143 @@ For `g(4, {3})`, the minimum was via node 3. So, 4->3.
 From 3 back to start 1. So, 3->1.
 Optimal Path: **1 -> 2 -> 4 -> 3 -> 1**
 Verification: `1 + 3 + 8 + 9 = 21`.
+
+---
+
+## Q6: Find the Longest Common Subsequence (LCS) of X="acbaed" and Y="abcadf" using dynamic programming approach. (10 Marks)
+
+**Answer:**
+
+**Longest Common Subsequence (LCS):**
+The LCS problem is to find the longest subsequence common to two sequences. A subsequence does not need to be contiguous, but it must maintain the relative order of elements.
+
+**Dynamic Programming Approach:**
+Let `X` of length `m` and `Y` of length `n`. We build a 2D table `L[0..m][0..n]` where `L[i][j]` contains the length of LCS of `X[0..i-1]` and `Y[0..j-1]`.
+Recurrence Relation:
+1.  `L[i][j] = 0` if `i=0` or `j=0` (Base case: empty string)
+2.  `L[i][j] = L[i-1][j-1] + 1` if `X[i-1] == Y[j-1]` (Characters match, add 1 to the diagonal)
+3.  `L[i][j] = max(L[i-1][j], L[i][j-1])` if `X[i-1] != Y[j-1]` (Characters differ, take max of top or left)
+
+**Solving for X="acbaed", Y="abcadf":**
+`m` = 6, `n` = 6.
+
+| | 0 | 1(a) | 2(b) | 3(c) | 4(a) | 5(d) | 6(f) |
+|---|---|---|---|---|---|---|---|
+| **0** | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **1(a)** | 0 | 1(\\) | 1 | 1 | 1(\\) | 1 | 1 |
+| **2(c)** | 0 | 1 | 1 | 2(\\) | 2 | 2 | 2 |
+| **3(b)** | 0 | 1 | 2(\\) | 2 | 2 | 2 | 2 |
+| **4(a)** | 0 | 1 | 2 | 2 | 3(\\) | 3 | 3 |
+| **5(e)** | 0 | 1 | 2 | 2 | 3 | 3 | 3 |
+| **6(d)** | 0 | 1 | 2 | 2 | 3 | 4(\\) | 4 |
+
+*(Note: (\\) indicates where characters matched and value came from diagonal top-left).*
+
+**Traceback to find the sequence:**
+Start at `L[6][6]` (value 4).
+- `L[6][6]` (4) came from `L[6][5]` (4). Move left to `L[6][5]`.
+- `L[6][5]` (4) has `X[5]=='d'` and `Y[4]=='d'`. Match! Add **'d'** to LCS. Move diagonal to `L[5][4]`.
+- `L[5][4]` (3). `X[4]='e'`, `Y[3]='a'`. Mismatch. Max comes from top `L[4][4]` (3). Move up.
+- `L[4][4]` (3). `X[3]='a'`, `Y[3]='a'`. Match! Add **'a'** to LCS. Move diagonal to `L[3][3]`.
+- `L[3][3]` (2). `X[2]='b'`, `Y[2]='c'`. Mismatch. Max comes from left `L[3][2]` (2). Move left.
+- `L[3][2]` (2). `X[2]='b'`, `Y[1]='b'`. Match! Add **'b'** to LCS. Move diagonal to `L[2][1]`.
+- `L[2][1]` (1). `X[1]='c'`, `Y[0]='a'`. Mismatch. Max from top `L[1][1]` (1). Move up.
+- `L[1][1]` (1). `X[0]='a'`, `Y[0]='a'`. Match! Add **'a'** to LCS. Move diagonal to `L[0][0]` (0). Stop.
+
+**Result:**
+The length of LCS is **4**.
+Reversing the extracted characters ('d', 'a', 'b', 'a') gives the Longest Common Subsequence: **"abad"**.
+
+---
+
+## Q7: Discuss the Matrix Chain Multiplication problem using Dynamic Programming. (10 Marks)
+
+**Answer:**
+
+**Matrix Chain Multiplication Problem:**
+Given a sequence of `n` matrices `A1, A2, ..., An`, where matrix `Ai` has dimension `p[i-1] x p[i]`, we need to fully parenthesize the product `A1 A2 ... An` in a way that minimizes the number of scalar multiplications.
+Matrix multiplication is associative, so `(AB)C = A(BC)`. However, the cost of computing them can vary wildly. Multiplying a `(p x q)` matrix by a `(q x r)` matrix takes `p * q * r` scalar multiplications.
+
+**Dynamic Programming Approach:**
+We build a table `m[i, j]` which stores the minimum number of scalar multiplications needed to compute the matrix `Ai..j` (the product from matrix `i` to `j`).
+
+**Recurrence Relation:**
+*   `m[i, i] = 0` (Base case: multiplying one matrix costs 0).
+*   For `i < j`, we try all possible split points `k` (where `i <= k < j`).
+    `m[i, j] = min { m[i, k] + m[k+1, j] + p[i-1]*p[k]*p[j] }` for all `i <= k < j`.
+    Here, `p[i-1]*p[k]*p[j]` is the cost of multiplying the two resulting matrices `(A_i..k)` and `(A_k+1..j)`.
+
+**Algorithm:**
+```text
+MATRIX-CHAIN-ORDER(p) // p is array of dimensions
+1. n = p.length - 1
+2. let m[1..n, 1..n] and s[1..n, 1..n] be new tables
+3. for i = 1 to n
+4.     m[i, i] = 0 // Base cases
+5. for L = 2 to n // L is the chain length
+6.     for i = 1 to n - L + 1
+7.         j = i + L - 1
+8.         m[i, j] = INFINITY
+9.         for k = i to j - 1
+10.            q = m[i, k] + m[k+1, j] + p[i-1]*p[k]*p[j]
+11.            if q < m[i, j]
+12.                m[i, j] = q
+13.                s[i, j] = k // Store split point for optimal parentheses
+14. return m and s
+```
+**Time Complexity:** `O(n^3)` because there are three nested loops.
+**Space Complexity:** `O(n^2)` to store the `m` and `s` tables.
+
+---
+
+## Q8: Describe branch and bound technique. Explain live node and dead node, FIFO and LC branch and bound. (10 Marks)
+
+**Answer:**
+
+**Branch and Bound (B&B) Technique:**
+Branch and Bound is an algorithmic technique used primarily for solving optimization problems (minimization or maximization), especially those that are NP-Hard. It systematically enumerates all candidate solutions by building a State Space Tree.
+*   **Branching:** It divides the problem into smaller subproblems (generating children in the tree).
+*   **Bounding:** It calculates a bound (a lower bound for minimization, upper bound for maximization) on the best possible solution that can be obtained from a given node.
+*   **Pruning:** If the bound of a node is worse than the best solution found so far (the "incumbent"), that node and all its descendants are "pruned" (discarded), significantly reducing the search space compared to exhaustive search.
+
+**Terminology:**
+*   **Live Node:** A generated node for which all children have not yet been generated. It is currently in the list of nodes to be explored.
+*   **Dead Node:** A generated node that is not to be expanded or explored any further. A node becomes dead when all its children are generated, or if it has been pruned because its bound is worse than the current best solution.
+*   **E-node (Expansion node):** The specific live node whose children are currently being generated.
+
+**Search Strategies in B&B:**
+1.  **FIFO Branch and Bound (Queue):**
+    *   It uses a First-In-First-Out (FIFO) queue to store live nodes.
+    *   It behaves like a Breadth-First Search (BFS) of the state space tree. The oldest live node is selected as the next E-node.
+    *   *Drawback:* It explores the tree blindly, level by level, without using the bounds to guide the search direction, which can be inefficient for finding an early optimal solution.
+2.  **LC Branch and Bound (Least Cost):**
+    *   It uses a Min-Priority Queue (min-heap) to store live nodes.
+    *   The "cost" (or bound) of each live node is calculated. The live node with the *least cost* (most promising bound) is selected as the next E-node.
+    *   *Advantage:* This is an "intelligent" search. By always expanding the most promising node, it tends to find the optimal solution much faster and prunes large sections of the tree earlier. This is the standard and most effective way to implement B&B.
+
+---
+
+## Q9: Explain Graph Coloring problem and Hamiltonian Circuit problem using backtracking. (10 Marks)
+
+**Answer:**
+
+**1. Graph Coloring Problem (m-Coloring):**
+Given an undirected graph `G=(V,E)` and an integer `m`, the problem is to assign colors to all vertices such that no two adjacent vertices have the same color, using at most `m` colors.
+*   **Backtracking Approach:**
+    We assign colors sequentially to vertices `1, 2, ..., n`. For vertex `k`, we try assigning colors from `1` to `m`.
+    Before assigning color `c` to vertex `k`, we check if any of its adjacent vertices (which have already been colored) have color `c`.
+    *   If no conflict, we assign color `c` to vertex `k` and recursively move to vertex `k+1`.
+    *   If there is a conflict, we try the next color `c+1`.
+    *   If all `m` colors are exhausted for vertex `k` and none work, we **backtrack** to vertex `k-1` and try to change its color to the next available option.
+
+**2. Hamiltonian Circuit Problem:**
+Given an undirected graph, a Hamiltonian circuit is a path that starts at a starting vertex, visits every other vertex in the graph exactly once, and returns to the starting vertex.
+*   **Backtracking Approach:**
+    We build the path iteratively. Let the path array be `x[1..n]`. We start with `x[1] = 1` (arbitrary starting node).
+    To find the `k`-th vertex in the path, `x[k]`:
+    We try all vertices `v` from `2` to `n`. A vertex `v` can be placed at `x[k]` if:
+    1.  There is an edge between `x[k-1]` and `v`.
+    2.  Vertex `v` has not already been visited in the path `x[1...k-1]`.
+    If these conditions are met, we set `x[k] = v` and recursively find `x[k+1]`.
+    *   **Base/Success Case:** If we have successfully placed `n` vertices (`k=n`), we must do one final check: is there an edge from `x[n]` back to `x[1]`? If yes, a Hamiltonian circuit is found.
+    *   **Backtracking:** If at step `k`, no valid vertex can be found, we backtrack to step `k-1` and try a different valid adjacent vertex for `x[k-1]`.

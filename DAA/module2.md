@@ -403,3 +403,168 @@ Consider a graph with vertices {A, B, C, D} and edges:
 To B: 1. Path: A->B
 To C: 3. Path: A->B->C
 To D: 6. Path: A->B->C->D
+
+---
+
+## Q9: What do you mean by greedy algorithm? Write greedy algorithm for Huffman code. Compute suitable Huffman coding to compress data A={i/119, m/96, c/247, g/283, h/72, f/77, k/95, j/19}. (10 Marks)
+
+**Answer:**
+
+**Greedy Algorithm:**
+A greedy algorithm is an optimization technique that makes the locally optimal choice at each step with the hope that these local choices will lead to a globally optimal solution. It builds up a solution piece by piece, always choosing the next piece that offers the most immediate and obvious benefit.
+
+**Huffman Coding Algorithm (Greedy):**
+Huffman coding is a lossless data compression algorithm. The idea is to assign variable-length codes to input characters, with lengths based on the frequencies of corresponding characters. The most frequent character gets the smallest code and the least frequent character gets the largest code.
+
+```text
+HUFFMAN(C) // C is a set of n characters, each with a frequency c.freq
+1. n = |C|
+2. Q = C // Q is a min-priority queue keyed by frequency
+3. for i = 1 to n - 1
+4.     allocate a new node z
+5.     z.left = x = EXTRACT-MIN(Q)
+6.     z.right = y = EXTRACT-MIN(Q)
+7.     z.freq = x.freq + y.freq
+8.     INSERT(Q, z)
+9. return EXTRACT-MIN(Q) // return the root of the tree
+```
+*Greedy Choice Property:* It greedily merges the two nodes with the lowest frequencies at each step, ensuring they end up deepest in the tree (and thus get the longest codes).
+
+**Computing Huffman Coding for given data:**
+Frequencies: `i:119, m:96, c:247, g:283, h:72, f:77, k:95, j:19`
+Sort by frequency: `j:19, h:72, f:77, k:95, m:96, i:119, c:247, g:283`
+
+**Step-by-step tree building:**
+1.  Merge smallest two (`j:19, h:72`): New node `N1` freq = 19+72 = 91.
+    Queue: `f:77, N1:91, k:95, m:96, i:119, c:247, g:283`
+2.  Merge `f:77, N1:91`: New node `N2` freq = 77+91 = 168.
+    Queue: `k:95, m:96, i:119, N2:168, c:247, g:283`
+3.  Merge `k:95, m:96`: New node `N3` freq = 95+96 = 191.
+    Queue: `i:119, N2:168, N3:191, c:247, g:283`
+4.  Merge `i:119, N2:168`: New node `N4` freq = 119+168 = 287.
+    Queue: `N3:191, c:247, g:283, N4:287`
+5.  Merge `N3:191, c:247`: New node `N5` freq = 191+247 = 438.
+    Queue: `g:283, N4:287, N5:438`
+6.  Merge `g:283, N4:287`: New node `N6` freq = 283+287 = 570.
+    Queue: `N5:438, N6:570`
+7.  Merge `N5:438, N6:570`: Root node freq = 1008.
+
+**Tree Traversal (Left=0, Right=1):**
+*   Root -> L(N5), R(N6)
+*   N5 -> L(N3), R(c:247)
+*   N6 -> L(g:283), R(N4)
+*   N3 -> L(k:95), R(m:96)
+*   N4 -> L(i:119), R(N2)
+*   N2 -> L(f:77), R(N1)
+*   N1 -> L(j:19), R(h:72)
+
+**Generated Codes (Trace path from root):**
+*   `c` (247): 01
+*   `g` (283): 10
+*   `k` (95): 000
+*   `m` (96): 001
+*   `i` (119): 110
+*   `f` (77): 1110
+*   `j` (19): 11110
+*   `h` (72): 11111
+
+---
+
+## Q10: Discuss the Kruskal's algorithm and find the minimum cost spanning tree. (10 Marks)
+
+**Answer:**
+
+**Kruskal's Algorithm:**
+Kruskal's algorithm is a greedy algorithm used to find the Minimum Spanning Tree (MST) of a connected, undirected graph. Unlike Prim's which grows a single tree, Kruskal's treats every node as an individual tree initially (a forest) and greedily merges them by picking the smallest available edge that does not form a cycle.
+
+**Algorithm:**
+1.  Sort all edges of the graph in non-decreasing order of their weights.
+2.  Initialize the MST as empty.
+3.  Iterate through the sorted edges. For each edge `(u, v)`:
+    *   Check if adding this edge to the MST forms a cycle (usually done using a Disjoint-Set / Union-Find data structure).
+    *   If it does NOT form a cycle, add the edge to the MST.
+    *   If it forms a cycle, discard the edge.
+4.  Stop when there are exactly `V - 1` edges in the MST (where V is the number of vertices).
+
+**Time Complexity:** `O(E log E)` or `O(E log V)` primarily due to sorting the edges.
+
+**Example Application (Conceptual):**
+Given a graph, list all edges: e.g., `(A,B, 2), (C,D, 3), (A,C, 4)...`
+*   Sort them: `(A,B, 2), (C,D, 3), (A,C, 4)...`
+*   Pick `(A,B, 2)`. No cycle. Add to MST.
+*   Pick `(C,D, 3)`. No cycle. Add to MST.
+*   Pick `(A,C, 4)`. No cycle. Add to MST. (Now A,B,C,D are connected).
+*   If next edge is `(B,D, 5)`, it would form a cycle `A-B-D-C-A`. Discard it.
+*   Continue until `V-1` edges are selected.
+
+---
+
+## Q11: Explain how Bellman Ford algorithm is used for finding shortest path problem. (10 Marks)
+
+**Answer:**
+
+**Bellman-Ford Algorithm:**
+The Bellman-Ford algorithm solves the single-source shortest path problem. Unlike Dijkstra's algorithm, it is capable of handling graphs with **negative weight edges**. It can also detect the presence of negative weight cycles (cycles whose total weight is less than zero), which make finding a shortest path impossible.
+
+**Algorithm Mechanism:**
+It relies on the principle of "relaxation". If there are `V` vertices, the shortest path between any two vertices can have at most `V-1` edges (without cycles). The algorithm relaxes all edges `V-1` times.
+"Relaxing" an edge `(u, v)` means checking if the known shortest path to `v` can be improved by going through `u`.
+`If distance[u] + weight(u, v) < distance[v]`, then update `distance[v]`.
+
+**Algorithm:**
+```text
+BELLMAN-FORD(G, w, s) // Graph G, weights w, source s
+1. // Initialization
+2. for each vertex v in G.V
+3.     distance[v] = INFINITY
+4. distance[s] = 0
+
+5. // Relax all edges V-1 times
+6. for i = 1 to |G.V| - 1
+7.     for each edge (u, v) in G.E
+8.         if distance[u] + w(u, v) < distance[v]
+9.             distance[v] = distance[u] + w(u, v)
+
+10. // Check for negative-weight cycles
+11. for each edge (u, v) in G.E
+12.     if distance[u] + w(u, v) < distance[v]
+13.         return FALSE // Graph contains a negative-weight cycle
+14. return TRUE // Successful, distance array contains shortest paths
+```
+
+**Time Complexity:** `O(V * E)` because it iterates through all `E` edges `V-1` times. It is slower than Dijkstra's but much more versatile for complex networks.
+
+---
+
+## Q12: How to maximize the profit earned in job sequencing with deadlines with greedy principle? Explain the algorithm with example. (8 Marks)
+
+**Answer:**
+
+**Job Sequencing with Deadlines (Greedy Strategy):**
+The problem gives `n` jobs, each taking 1 unit of time, with a deadline `d_i` and a profit `p_i`. A job yields profit only if completed before or on its deadline. The goal is to maximize total profit.
+The Greedy Choice is to **always select the job with the highest profit first**, provided it can be scheduled without violating any deadlines.
+
+**Algorithm:**
+1.  Sort all jobs in descending order of their profit.
+2.  Find the maximum deadline `max_d` among all jobs.
+3.  Create an array (timeline/slots) of size `max_d` initialized to empty.
+4.  For each job in the sorted list:
+    *   Look for a free time slot starting from its deadline `d_i` down to 1.
+    *   If a free slot is found, assign the job to that slot and add its profit to the total.
+    *   If no free slot is found before its deadline, discard the job.
+
+**Example:**
+Jobs: J1, J2, J3, J4, J5
+Profits: 20, 15, 10, 5, 1
+Deadlines: 2, 2, 1, 3, 3
+
+1.  **Sort by Profit:** J1(20, d=2), J2(15, d=2), J3(10, d=1), J4(5, d=3), J5(1, d=3)
+2.  Max deadline = 3. Create slots `[ _, _, _ ]` (Slots 1, 2, 3).
+3.  **Process J1 (20, d=2):** Look slot 2 -> empty. Place J1. Slots: `[ _, J1, _ ]`. Profit = 20.
+4.  **Process J2 (15, d=2):** Look slot 2 -> filled. Look slot 1 -> empty. Place J2. Slots: `[ J2, J1, _ ]`. Profit = 20 + 15 = 35.
+5.  **Process J3 (10, d=1):** Look slot 1 -> filled. No earlier slots. Discard J3.
+6.  **Process J4 (5, d=3):** Look slot 3 -> empty. Place J4. Slots: `[ J2, J1, J4 ]`. Profit = 35 + 5 = 40.
+7.  **Process J5 (1, d=3):** Slots 3, 2, 1 are all filled. Discard J5.
+
+**Optimal Schedule:** Sequence J2 -> J1 -> J4.
+**Maximum Profit:** 40.

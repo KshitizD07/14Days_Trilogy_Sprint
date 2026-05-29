@@ -1,10 +1,10 @@
-# Solved Numericals and Practical Problems - Compiler Design
+# Solved Numericals and Practical Problems - Compiler Design (Master Version)
 
-This document contains step-by-step solutions to specific numerical and practical problems found in the Compiler Design PYQs that were identified during the final audit.
+This document contains exhaustive, step-by-step solutions to specific numerical and practical problems found in the Compiler Design PYQs.
 
 ---
 
-## 1. Construct the LALR(1) parsing items for the grammar: [S->AA, A->aA|b].
+## 1. LALR(1) Parsing Items: [S->AA, A->aA|b]
 
 ### Augmented Grammar
 (0) $S' \to S$
@@ -12,46 +12,46 @@ This document contains step-by-step solutions to specific numerical and practica
 (2) $A \to aA$
 (3) $A \to b$
 
-### LALR(1) Canonical Collection
-LALR(1) items are formed by merging LR(1) items that share the same "core" (the LR(0) part).
+### LALR(1) Canonical Collection of Items
+LALR(1) items are formed by merging LR(1) items that share the identical LR(0) "core".
 
-- **$I_0$**: 
-  $[S' \to \cdot S, \$]$
-  $[S \to \cdot AA, \$]$
-  $[A \to \cdot aA, a/b]$
-  $[A \to \cdot b, a/b]$
-- **$I_1$**: (GOTO $I_0, S$)
-  $[S' \to S \cdot, \$]$
-- **$I_2$**: (GOTO $I_0, A$)
-  $[S \to A \cdot A, \$]$
-  $[A \to \cdot aA, \$]$
-  $[A \to \cdot b, \$]$
-- **$I_{36}$**: (Merged GOTO $I_0, a$ and $I_2, a$)
-  $[A \to a \cdot A, a/b/\$]$
-  $[A \to \cdot aA, a/b/\$]$
-  $[A \to \cdot b, a/b/\$]$
-- **$I_{47}$**: (Merged GOTO $I_0, b$ and $I_2, b$)
-  $[A \to b \cdot, a/b/\$]$
-- **$I_5$**: (GOTO $I_2, A$)
-  $[S \to AA \cdot, \$]$
-- **$I_{89}$**: (Merged GOTO $I_{36}, A$)
-  $[A \to aA \cdot, a/b/\$]$
+| State | Item Set (Merged) | Lookahead |
+| :---: | :--- | :---: |
+| **I0** | $S' \to \cdot S, S \to \cdot AA, A \to \cdot aA, A \to \cdot b$ | $ |
+| **I1** | $S' \to S \cdot$ | $ |
+| **I2** | $S \to A \cdot A, A \to \cdot aA, A \to \cdot b$ | $ |
+| **I36**| $A \to a \cdot A, A \to \cdot aA, A \to \cdot b$ | $ / a / b |
+| **I47**| $A \to b \cdot$ | $ / a / b |
+| **I5** | $S \to AA \cdot$ | $ |
+| **I89**| $A \to aA \cdot$ | $ / a / b |
+
+### State Transition Map
+```text
+I0 --S--> I1
+I0 --A--> I2
+I0 --a--> I36
+I0 --b--> I47
+
+I2 --A--> I5
+I2 --a--> I36
+I2 --b--> I47
+
+I36 --A--> I89
+I36 --a--> I36 (Loop)
+I36 --b--> I47
+```
 
 ---
 
-## 2. Construct the SLR parsing table for: [E -> E+T | T, T -> id].
+## 2. SLR Parsing Table: [E -> E+T | T, T -> id]
 
 ### LR(0) Canonical Collection
-- **$I_0$**: $E' \to \cdot E, E \to \cdot E+T, E \to \cdot T, T \to \cdot id$
-- **$I_1$**: $Goto(I_0, E) = [E' \to E \cdot, E \to E \cdot + T]$
-- **$I_2$**: $Goto(I_0, T) = [E \to T \cdot]$
-- **$I_3$**: $Goto(I_0, id) = [T \to id \cdot]$
-- **$I_4$**: $Goto(I_1, +) = [E \to E + \cdot T, T \to \\cdot id]$
-- **$I_5$**: $Goto(I_4, T) = [E \to E + T \\cdot]$
-
-### FOLLOW Sets
-- $FOLLOW(E) = \{\$, +\}$
-- $FOLLOW(T) = \{\$, +\}$
+- **I0:** $E' \to \cdot E, E \to \cdot E+T, E \to \cdot T, T \to \cdot id$
+- **I1:** (Goto I0, E) $E' \to E \cdot, E \to E \cdot + T$
+- **I2:** (Goto I0, T) $E \to T \cdot$
+- **I3:** (Goto I0, id) $T \to id \cdot$
+- **I4:** (Goto I1, +) $E \to E + \cdot T, T \to \cdot id$
+- **I5:** (Goto I4, T) $E \to E + T \cdot$
 
 ### SLR Parsing Table
 | State | id | + | $ | E | T |
@@ -63,91 +63,103 @@ LALR(1) items are formed by merging LR(1) items that share the same "core" (the 
 | **4** | s3 | | | | 5 |
 | **5** | | r1 | r1 | | |
 
----
-
-## 3. Construct the DAG for: `(a/10 + (b-10)) * (a/10 + (b-10))`.
-
-### Common Sub-expression Identification
-The sub-expression `(a/10 + (b-10))` is used twice.
-
-### DAG Nodes
-1.  **Leaf(a)**
-2.  **Leaf(10)**
-3.  **Node(3):** `/` with children 1 and 2 ($a/10$)
-4.  **Leaf(b)**
-5.  **Node(5):** `-` with children 4 and 2 ($b-10$)
-6.  **Node(6):** `+` with children 3 and 5 (result is the common sub-expression)
-7.  **Node(7):** `*` with children 6 and 6 (final multiplication)
+*Note: r1: E->E+T, r2: E->T, r3: T->id. Reduction occurs for symbols in FOLLOW set.*
 
 ---
 
-## 4. SDT Trace for input `2 + 3 * 4`.
+## 3. DAG for `(a/10 + (b-10)) * (a/10 + (b-10))`
 
-### Grammar with Semantic Rules
-1. $E \to E + T$ {$E.val = E_1.val + T.val$}
-2. $E \to T$ {$E.val = T.val$}
-3. $T \to T * F$ {$T.val = T_1.val * F.val$}
-4. $T \to F$ {$T.val = F.val$}
-5. $F \to (E)$ {$F.val = E.val$}
-6. $F \to num$ {$F.val = num.val$}
+### Step 1: Intermediate Code (TAC)
+1. `t1 = a / 10`
+2. `t2 = b - 10`
+3. `t3 = t1 + t2`
+4. `t4 = t3 * t3` (Reuse node t3)
 
-### Trace
-1.  **Scan '2':** $F \to 2$ ($F.val=2$) $\to T \to 2$ ($T.val=2$) $\to E \to 2$ ($E.val=2$).
-2.  **Scan '3':** $F \to 3$ ($F.val=3$) $\to T \to 3$ ($T.val=3$).
-3.  **Scan '4':** $F \to 4$ ($F.val=4$).
-4.  **Apply rule 3 ($T \to T * F$):** $T.val = 3 * 4 = 12$.
-5.  **Apply rule 1 ($E \to E + T$):** $E.val = 2 + 12 = 14$.
-**Final Result:** 14
+### Step 2: ASCII Directed Acyclic Graph (DAG)
+```text
+           [ * ]
+          /     \
+        [ + ] <---+
+       /     \    |
+    [ / ]   [ - ] |
+    /   \   /   \ |
+   a    (10)     b
+```
+
+### Node Reuse Explanation
+The sub-expression `(a/10 + (b-10))` is represented by the `[+]` node. In a syntax tree, this node would appear twice. In a DAG, the `[*]` node points to the same `[+]` node for both its left and right children, eliminating redundant computation.
 
 ---
 
-## 5. Basic Blocks Partitioning Example.
+## 4. SDT Trace for `2 + 3 * 4`
 
-### Sequence
-1) i = 1
-2) j = 1
-3) t1 = 10 * i
+| Step | Current Stack / Action | Semantic Rule Applied | Value Computed |
+| :--- | :--- | :--- | :--- |
+| 1 | `F -> 2` | $F.val = num.val$ | $F.val = 2$ |
+| 2 | `T -> F` | $T.val = F.val$ | $T.val = 2$ |
+| 3 | `E -> T` | $E.val = T.val$ | $E.val = 2$ |
+| 4 | `F -> 3` | $F.val = num.val$ | $F.val = 3$ |
+| 5 | `T -> F` | $T.val = F.val$ | $T.val = 3$ |
+| 6 | `F -> 4` | $F.val = num.val$ | $F.val = 4$ |
+| 7 | `T -> T * F` | $T.val = T_1.val * F.val$ | $T.val = 3 * 4 = 12$ |
+| 8 | `E -> E + T` | $E.val = E_1.val + T.val$ | $E.val = 2 + 12 = 14$ |
+
+**Final Value:** 14
+
+---
+
+## 5. Basic Blocks Partitioning: i/j Loop Trace
+
+### Code and Leader Identification
+```text
+1) i = 1             (Leader: Rule 1 - First)
+2) j = 1             (Leader: Rule 2 - Target of jump at 11)
+3) t1 = 10 * i       (Leader: Rule 2 - Target of jump at 9)
 4) t2 = t1 + j
-5) t3 = 8 * t2
-6) t4 = t3 - 8
-7) a[t4] = 0.0
-8) j = j + 1
+...
 9) if j <= 10 goto 3
-10) i = i + 1
+10) i = i + 1        (Leader: Rule 3 - Follows jump at 9)
 11) if i <= 10 goto 2
+```
 
-### Leaders Identification
-1.  **Instruction 1:** First instruction.
-2.  **Instruction 2:** Target of `goto 2` (inst 11).
-3.  **Instruction 3:** Target of `goto 3` (inst 9).
-4.  **Instruction 10:** Follows conditional jump (inst 9).
+### Block Mapping and Flow Diagram
+| Block | Instructions | Source | Target |
+| :---: | :--- | :---: | :---: |
+| **B1** | 1 | Start | B2 |
+| **B2** | 2 | B1, B4 | B3 |
+| **B3** | 3, 4, 5, 6, 7, 8, 9 | B2, B3 | B4, B3 |
+| **B4** | 10, 11 | B3 | B2, Exit |
 
-### Blocks
--   **Block 1:** {1}
--   **Block 2:** {2}
--   **Block 3:** {3, 4, 5, 6, 7, 8, 9}
--   **Block 4:** {10, 11}
+### Control Flow Graph (CFG)
+```text
+[ B1 ]
+  |
+  v
+[ B2 ] <-----+
+  |          |
+  v          |
+[ B3 ] <---+ |
+  |   \____| |
+  |          |
+  v          |
+[ B4 ] ______|
+  |
+  v
+[ Exit ]
+```
 
 ---
 
-## 6. Register Allocation (3 Registers) for `(a+b)*(c+d)+e`.
+## 6. Register Allocation for `(a+b)*(c+d)+e`
 
-Assume registers R1, R2, R3.
-
-1.  **LD R1, a** (R1 = a)
-2.  **LD R2, b** (R2 = b)
-3.  **ADD R1, R1, R2** (R1 = a+b)
-4.  **LD R2, c** (R2 = c)
-5.  **LD R3, d** (R3 = d)
-6.  **ADD R2, R2, R3** (R2 = c+d)
-7.  **MUL R1, R1, R2** (R1 = (a+b)*(c+d))
-8.  **LD R2, e** (R2 = e)
-9.  **ADD R1, R1, R2** (R1 = (a+b)*(c+d)+e)
-
----
-
-## 7. Role of `yylval` in YACC.
-
-In YACC (Yet Another Compiler-Compiler), `yylval` is a global variable (usually a `union`) used to communicate semantic values between the lexical analyzer (`yylex`) and the parser (`yyparse`).
--   When `yylex` identifies a token (like a number), it stores the actual value (e.g., `5`) in `yylval` before returning the token type (e.g., `NUM`).
--   The parser then accesses this value using the `$` notation (e.g., `$1` refers to the value of the first symbol in a production).
+| Operation | Machine Instruction | Register Status |
+| :--- | :--- | :--- |
+| Load `a` | `LD R1, a` | R1=a, R2=?, R3=? |
+| Load `b` | `LD R2, b` | R1=a, R2=b, R3=? |
+| $a+b$ | `ADD R1, R1, R2` | R1=(a+b), R2=b, R3=? |
+| Load `c` | `LD R2, c` | R1=(a+b), R2=c, R3=? |
+| Load `d` | `LD R3, d` | R1=(a+b), R2=c, R3=d |
+| $c+d$ | `ADD R2, R2, R3` | R1=(a+b), R2=(c+d), R3=d |
+| Multiply | `MUL R1, R1, R2` | R1=((a+b)*(c+d)), R2=(c+d), R3=d |
+| Load `e` | `LD R2, e` | R1=prod, R2=e, R3=d |
+| Final Add | `ADD R1, R1, R2` | R1=result, R2=e, R3=d |

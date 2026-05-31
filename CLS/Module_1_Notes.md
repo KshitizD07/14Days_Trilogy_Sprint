@@ -1,67 +1,101 @@
-# Module 1: Introduction to Cyber Crime (Extra Detailed for 10 Marks)
+# Module 1: Introduction to Information Security (CO1)
+(Detailed Study Material for 10-Mark Questions)
 
-## 1. Definition and Nature of Cyber Crime
-Cybercrime is an umbrella term that includes various illegal activities where a computer or a network is either the **tool** (used to commit the crime), the **target** (the victim of the crime), or a **storage device** (holding evidence of the crime).
+## 1. Introduction to Information Systems (IS)
+An **Information System (IS)** is a formal, sociotechnical, organizational system designed to collect, process, store, and distribute information. In a 10-mark context, a complete answer must include its components and classification.
 
-### **Key Characteristics of Cyber Crime**
-1.  **Borderless (Transnational):** A criminal in country A can attack a server in country B.
-2.  **Anonymity:** Use of VPNs, Tor, and spoofed IPs makes it hard to identify the culprit.
-3.  **Speed:** Crimes occur at the speed of electronic signals.
-4.  **High Profit, Low Risk:** Physical presence is not required, reducing the risk of capture.
+### **Components of an Information System**
+1.  **Hardware:** Physical technology that works with information (Servers, Workstations, Mobile devices).
+2.  **Software:** The programs that tell the hardware what to do (System software like OS, and Application software).
+3.  **Data:** Raw facts and figures that are processed to create meaning.
+4.  **Procedures:** Policies and rules that govern how the system is used.
+5.  **People:** The users, developers, and administrators who interact with the system.
 
-### **Cyber Crime vs. Conventional Crime (10 Marks Comparison)**
-| Feature | Conventional Crime | Cyber Crime |
-|---------|-------------------|-------------|
-| **Evidence** | Physical (blood, fingerprints, weapons). | Digital (Log files, IP addresses, volatile memory). |
-| **Visibility** | Usually immediate and noisy (e.g., burglary). | Can be silent and stealthy (e.g., data theft). |
-| **Jurisdiction** | Defined by physical police station limits. | Often involves multiple international laws. |
-| **Modus Operandi**| Physical strength or proximity needed. | Technical expertise and internet connection needed. |
+### **Types of Information Systems**
+*   **Transaction Processing Systems (TPS):** Track daily routine transactions (e.g., payroll, order entry).
+*   **Management Information Systems (MIS):** Provide reports for middle management to monitor and control.
+*   **Decision Support Systems (DSS):** Help in making non-routine decisions using data modeling.
+*   **Executive Support Systems (ESS):** Strategic-level systems for senior management.
 
----
-
-## 2. Classification of Cyber Crimes (10 Marks Depth)
-Cyber crimes are classified based on the target and the intent.
-
-### **Category A: Against Individuals**
-*   **Identity Theft:** Unauthorized use of another person's personal identifying information (Passwords, Aadhaar, Credit Card) to commit fraud.
-*   **Cyber Stalking:** Repeated harassment using electronic communication. It often leads to physical threats.
-*   **Phishing/Vishing/Smishing:** 
-    *   *Phishing:* Fake emails.
-    *   *Vishing:* Fake voice calls.
-    *   *Smishing:* Fake SMS.
-*   **Defamation:** Posting derogatory remarks about an individual on social media or forums.
-
-### **Category B: Against Property**
-*   **Hacking:** Gaining unauthorized access to a computer system.
-*   **Computer Vandalism (PYQ):** Deliberately damaging data or hardware (e.g., deleting a company's database).
-*   **Intellectual Property Crimes:** 
-    *   *Software Piracy:* Illegal copying of software.
-    *   *Cyber Squatting:* Registering domain names of famous brands to sell them later.
-*   **Transmitting Malware:** Spreading Viruses, Worms, Trojans, and Ransomware.
-
-### **Category C: Against Government**
-*   **Cyber Terrorism (PYQ):** Premeditated, politically motivated attacks against information, computer systems, and critical infrastructure (Power plants, Defense) to cause fear or death.
-*   **Cyber Warfare:** State-sponsored hacking into another nation's sensitive systems for intelligence or disruption.
+### **Development of Information Systems (SDLC)**
+The **Systems Development Life Cycle (SDLC)** is the standard process for building an IS:
+1.  **Planning:** Defining scope and feasibility.
+2.  **Analysis:** Understanding user requirements.
+3.  **Design:** Architecting the system and databases.
+4.  **Implementation:** Coding and installation.
+5.  **Maintenance:** Ongoing updates and security patches.
 
 ---
 
-## 3. Cybercriminals and their Targets
-1.  **Script Kiddies:** Amateur hackers using pre-written tools.
-2.  **Black Hat Hackers:** Malicious hackers seeking financial gain or destruction.
-3.  **Insiders:** Disgruntled employees who have legitimate access but misuse it.
-4.  **Hacktivists:** Hackers motivated by social or political causes.
+## 2. Introduction to Information Security & Cyber Security
+Information Security (InfoSec) protects information from unauthorized access, use, or destruction.
+
+### **The CIA Triad (The Foundation)**
+*   **Confidentiality:** Preventing unauthorized disclosure of information (Encryption, MFA).
+*   **Integrity:** Ensuring information is not altered by unauthorized parties (Hashing, Digital Signatures).
+*   **Availability:** Ensuring information is accessible when needed (Backups, DDoS protection).
+
+### **Information Assurance (IA)**
+While security is about protection, **Information Assurance** is broader. it ensures that data is not only secure but also **reliable, authentic, and legally valid**. It includes five pillars: Confidentiality, Integrity, Availability, **Authentication**, and **Non-repudiation**.
 
 ---
 
-## 4. Legal Perspective: The Indian IT Act, 2000 (Overview)
-The Information Technology Act, 2000 is India's primary law for cybercrime and e-commerce.
+## 3. Threats and Risk Analysis
+### **Classification of Threats**
+Threats are anything that can exploit a vulnerability to damage an asset.
+*   **Passive Threats:** Eavesdropping or monitoring. Hard to detect because they don't change data.
+*   **Active Threats:** Modifying data, impersonating users, or denying service.
+*   **Internal vs. External:** Threats from disgruntled employees (insiders) vs. outside hackers.
 
-### **Main Objectives:**
-1.  **Legal Recognition:** To give legal status to transactions carried out via electronic data interchange (E-Commerce).
-2.  **Digital Signatures:** To provide legal recognition for digital signatures for authentication.
-3.  **E-Governance:** To facilitate electronic filing of documents with government agencies.
-4.  **Crime Prevention:** To define and penalize cybercrimes like hacking and data theft.
+### **Security Risk Analysis**
+The systematic process of identifying and evaluating risks.
+*   **Risk Assessment:** Identifying assets and the threats against them.
+*   **Damage Assessment:** Evaluating the potential financial or reputational loss if a threat occurs.
+*   **Risk Mitigation Strategies:**
+    1.  *Avoidance:* Eliminate the cause (e.g., disconnecting a critical server from the web).
+    2.  *Transfer:* Shift the risk (e.g., Cyber Insurance).
+    3.  *Mitigation:* Reduce the impact (e.g., implementing a firewall).
+    4.  *Acceptance:* Do nothing if the cost of protection is higher than the asset value.
 
-### **Global Perspective:**
-*   **Budapest Convention (2001):** The first international treaty seeking to address Internet and computer crime by harmonizing national laws.
-*   **United Nations:** Focuses on international cooperation and capacity building for developing nations.
+---
+
+## 4. Security in Mobile and Wireless Computing
+Mobile devices are inherently more vulnerable due to their portability and connectivity.
+
+### **Security Challenges in Mobile Devices**
+1.  **Physical Theft:** Easy to lose, providing attackers with direct access.
+2.  **Unsecured Networks:** Using public Wi-Fi leads to Man-in-the-Middle (MitM) attacks.
+3.  **Malicious Apps:** Apps that request excessive permissions to steal data.
+4.  **Limited Hardware:** Encryption can sometimes slow down older mobile devices.
+
+### **Authentication Services**
+To secure devices, multiple layers of authentication are used:
+*   **Knowledge-based:** Passwords/PINs.
+*   **Possession-based:** OTPs, Security tokens.
+*   **Inherence-based:** Biometrics (Face ID, Fingerprint).
+
+---
+
+## 5. Application, Database, and E-mail Security
+*   **Application Security:** Ensuring software is built securely. Includes "Input Validation" to prevent SQL Injection.
+*   **Database Security:** Using access controls, views (limiting what users see), and encryption at rest.
+*   **E-mail Security:** Using protocols like **PGP (Pretty Good Privacy)** and **S/MIME** for encryption and digital signatures.
+*   **Internet Security:** Use of Firewalls (Filtering traffic) and VPNs (Virtual Private Networks) to create secure tunnels.
+
+---
+
+## 6. Data Security Considerations
+### **Backups**
+A critical "Safety Net" for data recovery.
+1.  **Full Backup:** Copies all data. Slow but easiest to restore.
+2.  **Incremental Backup:** Copies only what changed since the *last* backup.
+3.  **Differential Backup:** Copies everything changed since the *last full* backup.
+
+### **Archival Storage**
+The process of moving old but legally/historically important data to long-term storage (e.g., Tape drives or Cloud Glacier storage).
+
+### **Data Disposal**
+When data is no longer needed, it must be destroyed to prevent **Dumpster Diving**:
+*   **Degaussing:** Using high-powered magnets to scramble data on magnetic disks.
+*   **Physical Shredding:** Literally cutting up the hard drive.
+*   **Cryptographic Erase:** Deleting the encryption key so the data becomes unreadable.
